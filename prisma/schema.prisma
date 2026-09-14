@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum GiftStatus {
+  DISPONIVEL
+  RESERVADO
+  COMPRADO
+}
+
+enum PaymentMethod {
+  PIX
+  CARTAO
+  EXTERNO
+}
+
+enum PaymentStatus {
+  PENDENTE
+  APROVADO
+  RECUSADO
+  CANCELADO
+}
+
+model Gift {
+  id          String   @id @default(cuid())
+  nome        String
+  valor       Float
+  categoria   String
+  status      GiftStatus @default(DISPONIVEL)
+  descricao   String?
+  fotoUrl     String?
+  linkExterno String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  payments    Payment[]
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  gift            Gift          @relation(fields: [giftId], references: [id])
+  giftId          String
+  guestName       String
+  guestMessage    String?
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDENTE)
+  amount          Float
+  mpPaymentId     String?
+  mpStatusDetail  String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model GuestPhoto {
+  id        String   @id @default(cuid())
+  url       String
+  guestName String?
+  caption   String?
+  approved  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
