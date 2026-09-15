@@ -6,7 +6,6 @@ import Image from "next/image";
 const SLIDES = [
   { src: "/foto-da-capa.jpg", position: "center 42%" },
   { src: "/DSCF3255.jpg", position: "center 43%" },
-  { src: "/DSCF7414.jpg", position: "center 30%" },
   { src: "/DSCF8178.jpg", position: "center 55%" },
   { src: "/DSCF8260.jpg", position: "center 28%" },
 ];
