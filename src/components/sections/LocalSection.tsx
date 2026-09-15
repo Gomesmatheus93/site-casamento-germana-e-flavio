@@ -29,7 +29,7 @@ function VenueBlock({ venue }: { venue: Venue }) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
-      <div className="flex flex-col justify-center gap-4 border border-[var(--color-border)] bg-[var(--color-card)] p-8 lg:col-span-2">
+      <div className="flex flex-col justify-center gap-4 border border-[var(--color-border)] bg-white p-8 lg:col-span-2">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-secondary)]/12 text-[var(--color-secondary)]">
           <Icon className="h-5 w-5" strokeWidth={1.5} />
         </span>
@@ -82,7 +82,7 @@ export default function LocalSection() {
   ];
 
   return (
-    <section id="local" className="border-t border-[var(--color-border)] px-5 py-24">
+    <section id="local" className="bg-[var(--color-surface)] px-5 py-24">
       <div className="mx-auto max-w-6xl">
         <header className="text-center">
           <p className="eyebrow">Onde tudo vai acontecer</p>
@@ -110,7 +110,7 @@ export default function LocalSection() {
             {LOGISTICA.distancias.map((d) => (
               <div
                 key={d.cidade}
-                className="flex flex-col gap-3 border border-[var(--color-border)] bg-[var(--color-card)] p-7"
+                className="flex flex-col gap-3 border border-[var(--color-border)] bg-white p-7"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-secondary)]/12 text-[var(--color-secondary)]">
                   <Plane className="h-4 w-4" strokeWidth={1.5} />
@@ -152,7 +152,7 @@ export default function LocalSection() {
               return (
                 <div
                   key={idx}
-                  className="flex items-center gap-4 border border-[var(--color-border)] bg-[var(--color-card)] px-6 py-4"
+                  className="flex items-center gap-4 border border-[var(--color-border)] bg-white px-6 py-4"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-secondary)]/12 text-[var(--color-secondary)]">
                     <Icon className="h-4 w-4" strokeWidth={1.5} />

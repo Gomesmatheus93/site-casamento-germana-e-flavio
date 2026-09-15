@@ -60,7 +60,7 @@ export default function GiftList({ initialGifts }: { initialGifts: Gift[] }) {
           Nenhum presente encontrado com esse filtro.
         </p>
       ) : (
-        <div className="grid gap-x-10 gap-y-16 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((gift) => (
             <GiftCard key={gift.id} gift={gift} onSelect={setSelected} />
           ))}

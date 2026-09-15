@@ -9,7 +9,7 @@ export default function FotosSection({
   photos: GuestPhoto[];
 }) {
   return (
-    <section id="fotos" className="border-t border-[var(--color-border)] px-5 py-24">
+    <section id="fotos" className="bg-[var(--color-surface)] px-5 py-24">
       <div className="mx-auto max-w-6xl">
         <header className="mb-16 text-center">
           <p className="eyebrow">Registrado por quem estava lá</p>

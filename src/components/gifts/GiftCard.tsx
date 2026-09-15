@@ -19,7 +19,7 @@ export default function GiftCard({
   const disabled = gift.status === "COMPRADO";
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col border border-[var(--color-border)] bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_-18px_rgba(34,42,31,0.35)]">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--color-primary)]/5">
         {gift.fotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -42,7 +42,7 @@ export default function GiftCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 border-t border-[var(--foreground)]/20 pt-4">
+      <div className="flex flex-1 flex-col gap-2 p-5">
         <span className="text-[11px] uppercase tracking-[0.16em] text-[var(--color-secondary)]">
           {gift.categoria}
         </span>

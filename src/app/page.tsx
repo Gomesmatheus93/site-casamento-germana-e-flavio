@@ -49,20 +49,20 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="px-5 py-20 text-center">
-        <Countdown targetISO={WEDDING.dataISO} />
+      <section className="bg-[var(--color-wine)] px-5 py-20 text-center">
+        <Countdown targetISO={WEDDING.dataISO} light />
 
         <div className="mt-14 flex flex-wrap items-center justify-center gap-4">
-          <Link href="#presentes" className="btn-solid">
+          <Link href="#presentes" className="btn-solid-light">
             Lista de presentes
           </Link>
-          <Link href="#local" className="btn-outline">
+          <Link href="#local" className="btn-outline-light">
             Local da cerimônia
           </Link>
         </div>
       </section>
 
-      <section className="border-t border-[var(--color-border)] px-5 py-24">
+      <section className="bg-[var(--color-surface)] px-5 py-24">
         <div className="mx-auto max-w-2xl text-center">
           <p className="eyebrow">Com carinho</p>
           <h2 className="mt-4 font-serif-display text-4xl italic text-[var(--foreground)]">
