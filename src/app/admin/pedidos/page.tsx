@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import AdminShell from "@/components/admin/AdminShell";
 import { formatBRL } from "@/lib/format";
@@ -26,9 +27,15 @@ export default async function AdminPedidosPage() {
 
   return (
     <AdminShell>
-      <h1 className="font-serif-display text-2xl text-[var(--color-primary-dark)]">
-        Pedidos
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-serif-display text-2xl text-[var(--color-primary-dark)]">
+          Pedidos
+        </h1>
+        <a href="/api/admin/orders/export" className="btn-solid">
+          <Download className="h-3.5 w-3.5" />
+          Exportar CSV
+        </a>
+      </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-[var(--color-border)] bg-white">
         <table className="w-full text-left text-sm">
