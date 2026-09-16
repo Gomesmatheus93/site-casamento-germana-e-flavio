@@ -76,15 +76,17 @@
 .photo {
   position: relative;
   width: 100%;
-  height: min(66.6875cqw, 100cqh);
+  /* Portrait 2:3 photo: full width on phones, full height on wide screens. */
+  height: min(150cqw, 100cqh);
   flex-shrink: 0;
   overflow: hidden;
   background: #e9dcd3;
 }
 
+/* Fill the slot; on wide screens the crop keeps the couple and the lit cross. */
 .photoImage {
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: 50% 72%;
 }
 
 .invitationBody {

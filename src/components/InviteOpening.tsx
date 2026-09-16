@@ -394,7 +394,7 @@ export default function InviteOpening() {
         <div className={styles.card}>
           <article className={styles.invitation} aria-hidden={!revealed}>
             <div ref={scrollerRef} className={styles.invitationScroll} style={{ transform: `translate3d(0,${-read * overflow}px,0)` }}>
-              <div className={styles.photo}><Image src="/foto-da-capa.jpg" alt="Germana e Flávio juntos" fill priority sizes="100vw" className={styles.photoImage} /></div>
+              <div className={styles.photo}><Image src="/foto-convite.jpg" alt="Germana e Flávio se beijando" fill priority sizes="100vw" className={styles.photoImage} /></div>
               <div className={styles.invitationBody}>
                 <div className={styles.invitationArch} />
                 <FloralCorner className={`${styles.inviteFloral} ${styles.inviteFloralLeft}`} />
