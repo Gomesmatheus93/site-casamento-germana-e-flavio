@@ -1,25 +1,78 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, RotateCcw } from "lucide-react";
+import { ChevronDown, Church, MapPin, PartyPopper, RotateCcw } from "lucide-react";
 import { WEDDING } from "@/lib/wedding-config";
+import styles from "./InviteOpening.module.css";
 
-const PAPER = "linear-gradient(125deg, #e5cdd0, #d7b6bd 60%, #c99fa9)";
-const FLAP = "polygon(0 0,100% 0,100% 49%,50% 100%,0 49%)";
-const clamp = (n: number) => Math.min(1, Math.max(0, n));
-const phase = (p: number, start: number, end: number) => {
-  const t = clamp((p - start) / (end - start));
-  return t * t * (3 - 2 * t);
-};
-const space: CSSProperties = { transformStyle: "preserve-3d" };
+const clamp = (value: number) => Math.min(1, Math.max(0, value));
+// Smootherstep: gentler acceleration/deceleration at both ends than the
+// classic smoothstep, so staged transforms blend into each other instead
+// of visibly starting/stopping.
+const ease = (value: number) => value * value * value * (value * (value * 6 - 15) + 10);
+const phase = (progress: number, start: number, end: number) => ease(clamp((progress - start) / (end - start)));
+const OPEN_SHARE = 0.38;
+const mapsLink = (query: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
-function PaperTexture() {
-  return <div className="pointer-events-none absolute inset-0" style={{ filter: "url(#invite-fibers)", opacity: 0.3 }} />;
+function FloralCorner({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 140 140" fill="none" aria-hidden="true">
+      <path d="M13 128C20 80 45 35 124 12M14 105c24-7 38-21 44-42M39 58c25 2 44-9 56-28M69 35c9 10 23 13 38 7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M18 105C6 94 7 78 10 70c14 7 17 23 8 35ZM30 84C19 71 21 56 25 49c12 10 15 23 5 35ZM51 59c-4-16 3-28 10-33 7 14 4 27-10 33ZM77 39c1-15 12-24 21-26 2 16-7 25-21 26ZM46 85c10-12 24-13 34-10-8 14-23 18-34 10ZM82 45c14-8 28-5 35 1-12 11-26 11-35-1Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
+      <path d="M16 119c-8-5-11-15-9-21 10 4 13 13 9 21ZM101 28c6-10 17-15 27-13-4 11-16 17-27 13Z" fill="currentColor" fillOpacity=".12" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+function PaperGrain() {
+  return (
+    <svg width="0" height="0" className="absolute" aria-hidden="true">
+      <filter id="envelope-grain" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="9" stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+        <feComponentTransfer><feFuncA type="linear" slope="0.1" /></feComponentTransfer>
+        <feBlend in="SourceGraphic" mode="multiply" />
+      </filter>
+    </svg>
+  );
+}
+
+function SatinBow({ untie }: { untie: number }) {
+  // The bow is a photo, so it comes undone as one piece: it loosens, then
+  // slips down off the card and fades while the ribbon bands slide apart.
+  const loosen = phase(untie, 0, .4);
+  const slip = phase(untie, .3, .85);
+  const bowFade = phase(untie, .55, .95);
+  const bandSlide = phase(untie, .5, 1);
+  const ribbonFade = phase(untie, .9, 1);
+
+  return (
+    <div className={styles.ribbon} aria-hidden="true" style={{ opacity: 1 - ribbonFade }}>
+      <div className={styles.bandLeft} style={{ transform: `translate3d(${-bandSlide * 110}%,0,0) rotate(${-bandSlide * 6}deg)` }} />
+      <div className={styles.bandRight} style={{ transform: `translate3d(${bandSlide * 110}%,0,0) rotate(${bandSlide * 6}deg)` }} />
+      <div className={styles.bowShadow} style={{ opacity: 1 - phase(untie, 0, .5) }} />
+      <div className={styles.bowWrap}>
+        <Image
+          src="/laco.png"
+          alt=""
+          width={740}
+          height={740}
+          priority
+          className={styles.bow}
+          style={{
+            transform: `translate3d(0,${slip * 90}px,0) rotate(${-loosen * 2 - slip * 8}deg) scale(${1 - loosen * .05 - slip * .1})`,
+            opacity: 1 - bowFade,
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function InviteOpening() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [playProgress, setPlayProgress] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -33,22 +86,44 @@ export default function InviteOpening() {
     return () => media.removeEventListener("change", sync);
   }, []);
 
+  const targetScrollRef = useRef(0);
+  const smoothedScrollRef = useRef(0);
+
   useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const el = wrapperRef.current;
-        if (el) setScrollProgress(clamp(-el.getBoundingClientRect().top / Math.max(1, el.offsetHeight - window.innerHeight)));
-      });
+    const updateTarget = () => {
+      const scene = sceneRef.current;
+      if (!scene) return;
+      const distance = Math.max(1, scene.offsetHeight - window.innerHeight);
+      targetScrollRef.current = clamp(-scene.getBoundingClientRect().top / distance);
     };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    updateTarget();
+    window.addEventListener("scroll", updateTarget, { passive: true });
+    window.addEventListener("resize", updateTarget);
+
+    // Trail the raw scroll position instead of snapping to it 1:1, so the
+    // opening sequence keeps gliding smoothly even when the scroll input
+    // itself is jumpy (mouse wheel steps, trackpad micro-stutters).
+    let frame = 0;
+    const settle = () => {
+      const current = smoothedScrollRef.current;
+      const target = targetScrollRef.current;
+      const diff = target - current;
+      if (Math.abs(diff) > 0.0004) {
+        const next = current + diff * 0.16;
+        smoothedScrollRef.current = next;
+        setScrollProgress(next);
+      } else if (current !== target) {
+        smoothedScrollRef.current = target;
+        setScrollProgress(target);
+      }
+      frame = requestAnimationFrame(settle);
+    };
+    frame = requestAnimationFrame(settle);
+
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", updateTarget);
+      window.removeEventListener("resize", updateTarget);
     };
   }, []);
 
@@ -58,105 +133,150 @@ export default function InviteOpening() {
     let start: number | undefined;
     const animate = (now: number) => {
       start ??= now;
-      const next = clamp((now - start) / 3400);
+      const next = clamp((now - start) / 2800);
       setPlayProgress(next);
-      if (next < 1) frame = requestAnimationFrame(animate);
-      else setPlaying(false);
+      if (next < 1) {
+        frame = requestAnimationFrame(animate);
+        return;
+      }
+      setPlaying(false);
+      // Jump the page to where scrolling would have opened the card, so the
+      // next scroll continues straight into the details instead of idling.
+      const scene = sceneRef.current;
+      if (scene && targetScrollRef.current < OPEN_SHARE) {
+        const distance = Math.max(1, scene.offsetHeight - window.innerHeight);
+        const top = window.scrollY + scene.getBoundingClientRect().top + distance * OPEN_SHARE;
+        window.scrollTo({ top, behavior: "instant" });
+      }
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
   }, [playing]);
 
-  function openInvite() {
-    if (reducedMotion) setPlayProgress(1);
-    else setPlaying(true);
-  }
+  // The first stretch of scroll opens the card; the rest reads through it.
+  const scrollOpen = clamp(scrollProgress / OPEN_SHARE);
+  const progress = reducedMotion ? (playProgress > 0 || scrollOpen > .06 ? 1 : 0) : Math.max(scrollOpen, playProgress);
+  const untie = phase(progress, .03, .48);
+  const reveal = phase(progress, .42, .9);
+  const revealed = progress > .94;
+  const read = reducedMotion ? 0 : clamp((scrollProgress - OPEN_SHARE) / (1 - OPEN_SHARE));
+
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [overflow, setOverflow] = useState(0);
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const viewport = scroller?.parentElement;
+    if (!scroller || !viewport) return;
+    const measure = () => setOverflow(Math.max(0, scroller.scrollHeight - viewport.clientHeight));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(scroller);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
 
   function replay() {
+    setPlaying(false);
     setPlayProgress(0);
-    setScrollProgress(0);
-    const el = wrapperRef.current;
-    if (el) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top, behavior: "instant" });
-    setPlaying(true);
+    const scene = sceneRef.current;
+    if (scene) window.scrollTo({ top: window.scrollY + scene.getBoundingClientRect().top, behavior: "instant" });
   }
 
-  const p = reducedMotion ? (playProgress > 0 || scrollProgress > 0.1 ? 1 : 0) : Math.max(scrollProgress, playProgress);
-  const seal = phase(p, 0, 0.2);
-  const flap = phase(p, 0.15, 0.48);
-  const drop = phase(p, 0.48, 0.94);
-  const shade = Math.sin(flap * Math.PI);
-
   return (
-    <div ref={wrapperRef} className={reducedMotion ? "relative" : "relative h-[260vh]"}>
-      <svg width="0" height="0" className="absolute" aria-hidden="true">
-        <filter id="invite-fibers" x="0%" y="0%" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="3" seed="14" stitchTiles="stitch" />
-          <feColorMatrix type="saturate" values="0" />
-          <feComponentTransfer><feFuncA type="linear" slope="0.16" /></feComponentTransfer>
-          <feBlend in="SourceGraphic" mode="multiply" />
-        </filter>
-      </svg>
-      <div className={reducedMotion ? "relative flex min-h-svh items-center justify-center overflow-hidden px-5 py-24" : "sticky top-0 flex h-svh items-center justify-center overflow-hidden px-5"}
-        style={{ perspective: "1800px", perspectiveOrigin: "50% 42%", background: "radial-gradient(ellipse at 35% 25%, #fffef9, #f1f0e9 65%, #e8e7de)" }}>
-        <div className="relative" style={{ ...space, width: "min(100%, 390px, 47svh)", aspectRatio: "2 / 3" }}>
-          {/* Card stays still while the envelope slides away in front of it. */}
-          <article aria-hidden={p < 0.76} className="absolute inset-[3%] flex flex-col items-center justify-center px-5 text-center"
-            style={{ background: "linear-gradient(120deg,#fffef7,#f5f1e5)", transform: "translateZ(4px)", zIndex: 1, boxShadow: "1px 2px 0 #d8d2c2, 0 12px 26px rgba(42,43,31,0.18)", pointerEvents: p > 0.95 ? "auto" : "none" }}>
-            <PaperTexture />
-            <div className="pointer-events-none absolute inset-3 border border-[#b5a47c]/40" />
-            <p className="relative text-[8px] uppercase tracking-[0.25em] text-[#817458]">Com a bênção de Deus e de nossas famílias</p>
-            <div className="relative my-5 font-script text-5xl leading-[0.95] text-[#566343]" style={{ textShadow: "0 1px 0 white" }}>
-              {WEDDING.noivos.ela}<span className="my-2 block text-2xl text-[#b09b72]">&amp;</span>{WEDDING.noivos.ele}
+    <div ref={sceneRef} className={`${styles.scene} ${reducedMotion ? styles.reducedScene : ""}`}>
+      <div className={styles.stage}>
+        <div className={styles.card}>
+          <article className={styles.invitation} aria-hidden={!revealed}>
+            <div ref={scrollerRef} className={styles.invitationScroll} style={{ transform: `translate3d(0,${-read * overflow}px,0)` }}>
+              <div className={styles.photo}><Image src="/foto-da-capa.jpg" alt="Germana e Flávio juntos" fill priority sizes="(max-width: 600px) 94vw, 540px" className={styles.photoImage} /></div>
+              <div className={styles.invitationBody}>
+                <div className={styles.invitationArch} />
+                <FloralCorner className={`${styles.inviteFloral} ${styles.inviteFloralLeft}`} />
+                <FloralCorner className={`${styles.inviteFloral} ${styles.inviteFloralRight}`} />
+                <p className={styles.verse}>“Encontrei aquele a quem meu coração ama”</p>
+                <p className={styles.verseSource}>CÂNTICOS 3:4</p>
+                <div className={styles.ornament}><span />♥<span /></div>
+                <h1 className={styles.names}>{WEDDING.noivos.ela}<span>&amp;</span>{WEDDING.noivos.ele}</h1>
+                <p className={styles.inviteLine}>Convidam para celebrar o seu casamento</p>
+                <div className={styles.facts}>
+                  <div><span className={styles.factIcon}>✧</span><strong>01 NOV 2026</strong><span>Domingo</span></div>
+                  <div><span className={styles.factIcon}>◷</span><strong>{WEDDING.horario}</strong><span>Cerimônia</span></div>
+                  <div><span className={styles.factIcon}>⌖</span><strong>MOSSORÓ</strong><span>Rio Grande do Norte</span></div>
+                </div>
+                <p className={styles.inviteFoot}>Sua presença tornará este dia ainda mais especial.</p>
+              </div>
+
+              <section className={styles.detail}>
+                <p className={styles.detailEyebrow}>O grande dia</p>
+                <p className={styles.detailDate}>{WEDDING.dataFormatada}</p>
+                <p className={styles.detailMeta}>Domingo · às {WEDDING.horario}</p>
+              </section>
+
+              <section className={styles.detail}>
+                <Church className={styles.detailIcon} strokeWidth={1.4} />
+                <p className={styles.detailEyebrow}>Cerimônia</p>
+                <h2 className={styles.detailTitle}>{WEDDING.cerimonia.nome}</h2>
+                <p className={styles.detailMeta}>Às {WEDDING.horario}</p>
+                <p className={styles.detailText}>{WEDDING.cerimonia.endereco}</p>
+                <a className={styles.detailLink} href={mapsLink(WEDDING.cerimonia.mapsQuery)} target="_blank" rel="noopener noreferrer" tabIndex={revealed ? 0 : -1}><MapPin className={styles.detailLinkIcon} strokeWidth={1.6} />Ver no mapa</a>
+              </section>
+
+              <section className={styles.detail}>
+                <PartyPopper className={styles.detailIcon} strokeWidth={1.4} />
+                <p className={styles.detailEyebrow}>Festa</p>
+                <h2 className={styles.detailTitle}>{WEDDING.recepcao.nome}</h2>
+                <p className={styles.detailMeta}>Logo após a cerimônia</p>
+                <p className={styles.detailText}>{WEDDING.recepcao.endereco}</p>
+                <a className={styles.detailLink} href={mapsLink(WEDDING.recepcao.mapsQuery)} target="_blank" rel="noopener noreferrer" tabIndex={revealed ? 0 : -1}><MapPin className={styles.detailLinkIcon} strokeWidth={1.6} />Ver no mapa</a>
+              </section>
+
+              <section className={styles.detail}>
+                <p className={styles.detailEyebrow}>Traje &amp; paleta</p>
+                <h2 className={styles.detailTitle}>Um pedido carinhoso</h2>
+                <p className={styles.detailText}>
+                  Com todo o carinho, pedimos que evitem o marsala e os
+                  tons de vermelho: essas cores fazem parte da nossa paleta e ficarão
+                  reservadas aos padrinhos. Contamos com a compreensão de todos!
+                </p>
+              </section>
+
+              <section className={`${styles.detail} ${styles.detailClosing}`}>
+                <div className={styles.ornament}><span />♥<span /></div>
+                <p className={styles.closingNames}>{WEDDING.noivos.ela} &amp; {WEDDING.noivos.ele}</p>
+                <p className={styles.detailMeta}>Esperamos por você</p>
+              </section>
             </div>
-            <p className="relative max-w-52 font-serif-display text-sm italic leading-relaxed text-[#766f5e]">Convidam você para celebrar o seu casamento</p>
-            <div className="relative my-5 h-px w-12 bg-[#b5a47c]/60" />
-            <p className="relative font-serif-display text-lg text-[#566343]">{WEDDING.dataFormatada}</p>
-            <p className="relative mt-1 text-xs text-[#766f5e]">às {WEDDING.horario}</p>
-            <p className="relative mt-4 text-xs leading-relaxed text-[#766f5e]">{WEDDING.cerimonia.nome}<br />Mossoró · RN</p>
-            <Link href="/#local" tabIndex={p > 0.95 ? 0 : -1} className="tracked-link relative mt-5 !text-[9px] !text-[#566343]">Ver todos os detalhes</Link>
           </article>
 
-          {/* The completed envelope opens first, then descends past the viewport. */}
-          <div className="absolute inset-0" style={{ ...space, transform: `translate3d(0,${drop * 220}%,0)`, visibility: drop === 1 ? "hidden" : "visible", zIndex: 2 }}>
-            <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#b1838e,#d4b0b8 35%,#be929d)", transform: "translateZ(-3px)", border: "1px solid #b1838e", boxShadow: "2px 3px 0 #a37682, 5px 9px 14px -6px #63394338, 18px 28px 45px -12px #63394345" }}><PaperTexture /></div>
-            {/* Side folds meet under the seal and overlap the lower pocket. */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(95deg,#cba3ad,#e2c6cc)", clipPath: "polygon(0 20%,51% 43%,51% 100%,0 100%)", transform: "translateZ(7px)" }}><PaperTexture /></div>
-            <div className="absolute inset-0" style={{ background: "linear-gradient(260deg,#cba3ad,#e2c6cc)", clipPath: "polygon(100% 20%,49% 43%,49% 100%,100% 100%)", transform: "translateZ(7px)" }}><PaperTexture /></div>
-            <div className="absolute inset-0" style={{ background: PAPER, clipPath: "polygon(0 100%,0 58%,50% 39%,100% 58%,100% 100%)", transform: "translateZ(9px)" }}>
-              <PaperTexture />
-              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 58 L50 39 L100 58" fill="none" stroke="#f4e3e6" strokeWidth="0.35" /><path d="M0 58.4 L50 39.4 L100 58.4" fill="none" stroke="#b18490" strokeWidth="0.18" /></svg>
-              <p className="font-script absolute inset-x-0 top-[67%] text-center text-4xl text-[#743f50]" style={{ textShadow: "0 1px 0 #f5e5e8" }}>Você está convidado</p>
-              <p className="absolute inset-x-0 bottom-[10%] text-center text-[8px] uppercase tracking-[0.22em] text-[#8c5b6a]">Toque no selo para abrir</p>
+          <div className={styles.cover} aria-hidden={reveal > .98} style={{ transform: `translate3d(0,${-reveal * 120}%,${reveal * 120}px) rotateX(${-reveal * 36}deg)`, opacity: 1 - phase(reveal, .72, 1), visibility: reveal === 1 ? "hidden" : "visible" }}>
+            <PaperGrain />
+            <div className={styles.envelopeTexture} />
+            <div className={styles.coverFrame} />
+            <FloralCorner className={`${styles.coverFloral} ${styles.coverTopLeft}`} />
+            <FloralCorner className={`${styles.coverFloral} ${styles.coverTopRight}`} />
+            <FloralCorner className={`${styles.coverFloral} ${styles.coverBottomLeft}`} />
+            <FloralCorner className={`${styles.coverFloral} ${styles.coverBottomRight}`} />
+            <div className={styles.monogram} aria-label="Iniciais G e F">
+              <span className={styles.monogramLetter}>G</span>
+              <span className={styles.monogramAmp}>&amp;</span>
+              <span className={styles.monogramLetter}>F</span>
             </div>
-            <div className="pointer-events-none absolute inset-0" style={{ background: `linear-gradient(180deg,transparent 20%,rgba(82,43,55,${0.12 + shade * 0.24}) 30%,transparent ${48 + flap * 20}%)`, clipPath: "polygon(0 0,100% 0,100% 21%,50% 46%,0 21%)", transform: "translateZ(10px)" }} />
-
-            {/* Hinge is fixed to the top edge; both faces turn around the same crease. */}
-            <div className="absolute inset-x-0 top-0 h-[43%]" style={{ ...space, transformOrigin: "50% 0", transform: `translateZ(12px) rotateX(${flap * 174}deg)`, zIndex: flap < 0.5 ? 5 : 0 }}>
-              <div className="absolute inset-0" style={{ background: PAPER, clipPath: FLAP, backfaceVisibility: "hidden", transform: "translateZ(0.6px)" }}>
-                <PaperTexture />
-                <div className="absolute inset-0" style={{ background: `linear-gradient(150deg,rgba(255,255,255,0.25),rgba(91,48,62,${0.06 + shade * 0.25}))` }} />
-                <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0 49 L50 99.5 L100 49" fill="none" stroke="#ad7d8a" strokeWidth="0.6" /><path d="M0 48 L50 98.5 L100 48" fill="none" stroke="#f2dfe4" strokeWidth="0.35" /></svg>
-              </div>
-              <div className="absolute inset-0" style={{ background: "linear-gradient(140deg,#d0aab4,#e7d0d5)", clipPath: FLAP, backfaceVisibility: "hidden", transform: "rotateY(180deg) translateZ(0.6px)" }}>
-                <PaperTexture /><div className="absolute inset-0" style={{ background: "#59313e", opacity: shade * 0.2 }} />
-              </div>
-            </div>
-
-            {/* Wax breaks away before the hinge begins to turn. */}
-            <button type="button" onClick={openInvite} disabled={p > 0.05 || playing} aria-label="Abrir convite de casamento" className="absolute left-1/2 top-[43%] h-20 w-20 rounded-full focus-visible:outline-2 focus-visible:outline-offset-8 focus-visible:outline-[#566343]"
-              style={{ ...space, transform: `translate(-50%,-50%) translate3d(${seal * 32}px,${-seal * 24}px,${16 + seal * 95}px) rotateY(${seal * -28}deg) rotateZ(${seal * 12}deg)`, opacity: 1 - phase(p, 0.12, 0.25), visibility: seal === 1 ? "hidden" : "visible", zIndex: 6, cursor: "pointer", boxShadow: `4px ${5 + seal * 10}px ${6 + seal * 15}px rgba(62,35,29,${0.3 * (1 - seal)})` }}>
-              <div className="absolute inset-0" style={{ borderRadius: "47% 53% 49% 51% / 52% 46% 54% 48%", background: "radial-gradient(ellipse at 28% 20%,#f6a393,#de746b 38%,#be514f 72%,#913b40)", boxShadow: "inset 1px 2px 3px #ffd0b9, inset -2px -4px 5px #852f3c, 0 3px 0 #9c3f43" }}>
-                <span className="absolute inset-[14%] flex items-center justify-center rounded-full font-script text-3xl text-[#b04e4b]" style={{ border: "2px solid #b65350", boxShadow: "0 1px 1px #ffc0a7,inset 0 2px 3px #a54644,inset 0 -1px 1px #ffc0a7", textShadow: "0 1px 0 #ffb6a0,0 -1px 1px #8c363d" }}>{WEDDING.noivos.ela[0]}&amp;{WEDDING.noivos.ele[0]}</span>
-                <div className="absolute left-[19%] top-[9%] h-2 w-7 -rotate-[30deg] rounded-full bg-[#ffcfb7]/45 blur-[2px]" />
-              </div>
-            </button>
+            <p className={styles.openHint}>TOQUE PARA ABRIR</p>
+            <SatinBow untie={untie} />
+            <button type="button" className={styles.openButton} onClick={() => reducedMotion ? setPlayProgress(1) : setPlaying(true)} disabled={playing || progress > .05} aria-label="Abrir o convite de Germana e Flávio" />
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-6 flex justify-center">
-          {p > 0.98 ? <button onClick={replay} type="button" className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] text-[#8c5b6a]"><RotateCcw size={13} />Abrir novamente</button> : <div className="pointer-events-none flex flex-col items-center gap-2 text-[#8c5b6a]" style={{ opacity: 1 - phase(p, 0, 0.12) }}><span className="text-[9px] uppercase tracking-[0.2em]">Toque no selo ou role para abrir</span><ChevronDown size={15} /></div>}
+        <div className={styles.stageAction}>
+          {!revealed ? (
+            <div className={styles.scrollHint} style={{ opacity: 1 - phase(progress, .03, .2) }}><span>Toque no laço ou deslize para abrir</span><ChevronDown size={18} /></div>
+          ) : read < .97 && !reducedMotion ? (
+            <div className={styles.scrollHint} style={{ opacity: 1 - phase(read, .75, .97) }}><span>Continue rolando para ver os detalhes</span><ChevronDown size={18} /></div>
+          ) : (
+            <div className={styles.revealedActions}><button type="button" onClick={replay}><RotateCcw size={14} /> Ver novamente</button><Link href="/">Ir para o site</Link></div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

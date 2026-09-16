@@ -25,21 +25,25 @@ export default async function Home() {
     <div>
       <section className="relative flex h-screen w-full items-center justify-center overflow-hidden px-5 text-center">
         <HeroSlideshow alt={`${WEDDING.noivos.ela} e ${WEDDING.noivos.ele}`} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/55" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/65" />
 
-        <div className="relative z-10">
-          <p className="eyebrow animate-fade-up text-white/80" style={{ animationDelay: "0.1s" }}>
+        <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center text-center text-white drop-shadow-md">
+          <p
+            className="animate-fade-up text-xs font-semibold uppercase tracking-[0.28em] text-white"
+            style={{ animationDelay: "0.1s" }}
+          >
             Vamos nos casar
           </p>
           <h1
-            className="animate-fade-up font-serif-minimal mx-auto mt-6 max-w-4xl text-6xl leading-[1.05] text-white sm:text-8xl"
+            className="animate-fade-up font-serif-minimal mt-6 flex w-full flex-col items-center justify-center text-center text-6xl leading-[0.95] sm:flex-row sm:gap-x-4 sm:text-[clamp(3.5rem,9vw,6rem)]"
             style={{ animationDelay: "0.3s" }}
           >
-            {WEDDING.noivos.ela} <span className="text-[var(--color-primary)]">&amp;</span>{" "}
-            {WEDDING.noivos.ele}
+            <span>{WEDDING.noivos.ela}</span>
+            <span className="text-[#f4d6aa]">&amp;</span>
+            <span>{WEDDING.noivos.ele}</span>
           </h1>
           <p
-            className="animate-fade-up mx-auto mt-7 max-w-xl text-sm leading-relaxed text-white/85"
+            className="animate-fade-up mx-auto mt-7 max-w-xl text-center text-sm leading-relaxed text-white"
             style={{ animationDelay: "0.55s" }}
           >
             {WEDDING.dataFormatada} · {WEDDING.horario}
