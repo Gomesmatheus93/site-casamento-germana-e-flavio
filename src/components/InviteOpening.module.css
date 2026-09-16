@@ -1,6 +1,17 @@
 .scene {
   position: relative;
-  height: 560vh;
+  height: 560svh;
+  --foreground: #40312d;
+  --color-primary: #98734f;
+  --color-primary-dark: #4d3830;
+  --color-gold: #c8aa70;
+  --color-gold-dark: #a48248;
+  --color-card: #fff6f0;
+  --color-surface: #f7e9e1;
+  --color-muted: #826b61;
+  --color-border: #dfc9bb;
+  --color-marsala: #7c2d3b;
+  --color-marsala-dark: #5c1f2a;
 }
 
 .reducedScene {
@@ -10,30 +21,25 @@
 .stage {
   position: sticky;
   top: 0;
-  display: flex;
   height: 100svh;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
+  height: 100dvh;
   overflow: hidden;
-  padding: 1.5rem 1.25rem;
-  background: radial-gradient(ellipse at 35% 25%, #fffef9, #f6ede8 60%, var(--color-surface));
+  background: radial-gradient(ellipse at 35% 25%, #fffaf6, #f8ebe4 60%, var(--color-surface));
 }
 
 .reducedScene .stage {
   position: relative;
-  height: auto;
-  min-height: 100svh;
-  padding: 5rem 1.25rem;
+  height: 100svh;
+  height: 100dvh;
 }
 
 .card {
-  position: relative;
-  width: min(100%, 380px, 46svh);
-  aspect-ratio: 2 / 3;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   transform-style: preserve-3d;
-  perspective: 1600px;
+  perspective: 1000px;
   perspective-origin: 50% 42%;
 }
 
@@ -45,11 +51,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* The card is a query container so everything inside scales with it and
-     the text never overflows the fixed 2:3 format on small screens. */
+  /* The viewport is the query container for the full-screen invitation. */
   container-type: size;
   background: var(--color-card);
-  box-shadow: 1px 2px 0 var(--color-border), 0 18px 40px rgba(80, 40, 30, 0.2);
 }
 
 .invitationScroll {
@@ -71,23 +75,28 @@
 
 .photo {
   position: relative;
-  height: 34cqh;
+  width: 100%;
+  height: min(66.6875cqw, 100cqh);
   flex-shrink: 0;
   overflow: hidden;
+  background: #e9dcd3;
 }
 
 .photoImage {
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
 
 .invitationBody {
   position: relative;
   display: flex;
+  width: min(100%, 600px);
   min-height: 66cqh;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3cqh 6cqw 2cqh;
+  margin-inline: auto;
+  padding: 3cqh clamp(1.25rem, 6cqw, 3rem) 2cqh;
   text-align: center;
 }
 
@@ -107,7 +116,7 @@
   width: 9cqh;
   height: 9cqh;
   color: var(--color-gold);
-  opacity: 0.55;
+  opacity: 0.75;
 }
 
 .inviteFloralLeft {
@@ -121,13 +130,55 @@
   transform: scaleX(-1);
 }
 
+.inviteMonogram {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: clamp(0.6rem, 1.6cqh, 1rem);
+  width: clamp(8.5rem, 21cqh, 13rem);
+  margin: 2cqh 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.4rem, 5.4cqh, 4.2rem);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-marsala);
+}
+
+.inviteMonogram > span:first-child {
+  justify-self: end;
+}
+
+.inviteMonogram > span:last-child {
+  justify-self: start;
+}
+
+.inviteMonogramDivider {
+  display: flex;
+  height: clamp(1.8rem, 4.4cqh, 3rem);
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3cqh;
+  color: var(--color-marsala);
+}
+
+.inviteMonogramDivider span {
+  width: 1px;
+  flex: 1;
+  background: currentColor;
+}
+
+.inviteMonogramDivider svg {
+  width: clamp(0.55rem, 1.4cqh, 0.9rem);
+  height: clamp(0.55rem, 1.4cqh, 0.9rem);
+}
+
 .verse {
   max-width: 82%;
   font-family: var(--font-serif), Georgia, serif;
   font-size: 2.5cqh;
   font-style: italic;
   line-height: 1.45;
-  color: var(--color-primary-dark);
+  color: var(--color-gold-dark);
 }
 
 .verseSource {
@@ -135,7 +186,7 @@
   font-size: 1.9cqh;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-gold-dark);
 }
 
 .ornament {
@@ -145,21 +196,21 @@
   gap: 2cqw;
   margin: 1.6cqh 0;
   font-size: 2.1cqh;
-  color: var(--color-gold-dark);
+  color: var(--color-marsala);
 }
 
 .ornament span {
   display: inline-block;
   width: 7cqw;
   height: 1px;
-  background: var(--color-gold);
+  background: currentColor;
 }
 
 .names {
   font-family: var(--font-script), "Brush Script MT", cursive;
   font-size: 7.4cqh;
   line-height: 1.02;
-  color: var(--color-primary);
+  color: var(--color-marsala);
 }
 
 .names span {
@@ -167,25 +218,15 @@
   margin: 0.2cqh 0;
   font-family: var(--font-serif), Georgia, serif;
   font-size: 3cqh;
-  color: var(--color-gold-dark);
-}
-
-.inviteLine {
-  margin-top: 1.4cqh;
-  max-width: 82%;
-  font-size: 2.3cqh;
-  line-height: 1.45;
-  color: var(--foreground);
-  opacity: 0.75;
+  color: var(--color-marsala);
 }
 
 .facts {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2cqw;
   width: 100%;
-  margin-top: 2.4cqh;
-  padding-top: 2cqh;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 3cqh;
+  padding-top: 2.4cqh;
   border-top: 1px solid var(--color-border);
 }
 
@@ -193,41 +234,130 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3cqh;
+  gap: 0.5cqh;
+  padding: 0.4cqh 1.5cqw;
+}
+
+.facts div + div {
+  border-left: 1px solid var(--color-gold);
 }
 
 .facts strong {
   font-family: var(--font-serif), Georgia, serif;
-  font-size: 2.4cqh;
-  color: var(--color-primary-dark);
+  font-size: clamp(0.85rem, min(2.5cqh, 4.2cqw), 1.4rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum";
+  color: var(--color-marsala);
 }
 
 .facts span {
-  font-size: 1.8cqh;
-  letter-spacing: 0.06em;
+  font-size: clamp(0.62rem, 1.5cqh, 0.8rem);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted);
 }
 
 .factIcon {
-  font-size: 2.5cqh;
+  width: clamp(1.1rem, 2.6cqh, 1.5rem);
+  height: clamp(1.1rem, 2.6cqh, 1.5rem);
   color: var(--color-gold-dark);
 }
 
-.inviteFoot {
-  margin-top: 2cqh;
-  font-size: 1.9cqh;
-  font-style: italic;
-  color: var(--color-muted);
+.family {
+  width: min(820px, calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: 5cqh 0;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-primary-dark);
+  text-align: center;
+}
+
+.familyIcon {
+  width: clamp(1.75rem, 3.5cqh, 2.5rem);
+  height: clamp(1.75rem, 3.5cqh, 2.5rem);
+  margin: 0 auto 0.8cqh;
+  color: var(--color-gold-dark);
+}
+
+.familyIntro {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1rem, 2.2cqh, 1.35rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-marsala);
+}
+
+/* Stacked and centred by default, so no name has to break across lines. */
+.familyColumns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.2cqh;
+  margin-top: 2.4cqh;
+}
+
+.familySide p {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.05rem, 2.4cqh, 1.35rem);
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  color: var(--color-marsala);
+}
+
+.familySide p + p {
+  margin-top: 1.2cqh;
+}
+
+.familyPlus {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.3rem, 3cqh, 2rem);
+  line-height: 1;
+  color: var(--color-gold-dark);
+}
+
+/* With room for each name on one line, the two families sit side by side,
+   each column aligned against the "+" between them. */
+@container (min-width: 820px) {
+  .familyColumns {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 2rem;
+  }
+
+  .familySide:first-child {
+    text-align: right;
+  }
+
+  .familySide:last-child {
+    text-align: left;
+  }
+
+  .familySide p {
+    white-space: nowrap;
+  }
+}
+
+.inviteLine {
+  margin-top: 3cqh;
+  max-width: 82%;
+  font-size: 2.3cqh;
+  line-height: 1.45;
+  color: var(--foreground);
+  opacity: 0.75;
 }
 
 /* ---------- Details revealed while scrolling inside the card ---------- */
 
 .detail {
   display: flex;
+  width: min(600px, calc(100% - 2.5rem));
   flex-direction: column;
   align-items: center;
-  margin: 0 8cqw;
+  margin: 0 auto;
   padding: 5cqh 0;
   border-top: 1px solid var(--color-border);
   text-align: center;
@@ -248,22 +378,13 @@
   color: var(--color-primary);
 }
 
-.detailDate {
-  margin-top: 1.4cqh;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 4.4cqh;
-  font-style: italic;
-  line-height: 1.15;
-  color: var(--color-primary-dark);
-}
-
 .detailTitle {
   margin-top: 1.2cqh;
   font-family: var(--font-serif), Georgia, serif;
   font-size: 3.5cqh;
   font-weight: 500;
   line-height: 1.2;
-  color: var(--color-primary-dark);
+  color: var(--color-marsala);
 }
 
 .detailMeta {
@@ -280,6 +401,16 @@
   line-height: 1.6;
   color: var(--foreground);
   opacity: 0.75;
+}
+
+.detailTextJustified {
+  width: 100%;
+  text-align: justify;
+  hyphens: none;
+}
+
+.detailTextJustified + .detailTextJustified {
+  margin-top: 1.2cqh;
 }
 
 .detailLink {
@@ -301,6 +432,45 @@
   height: 2.2cqh;
 }
 
+.detailActions {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6cqh;
+  margin-top: 3cqh;
+}
+
+.detailButton {
+  display: inline-flex;
+  width: min(100%, 22rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: clamp(0.8rem, 1.8cqh, 1.1rem) 1.5rem;
+  border: 1px solid var(--color-marsala);
+  font-size: clamp(0.7rem, 1.7cqh, 0.85rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.detailButtonSolid {
+  background: var(--color-marsala);
+  color: #fff;
+}
+
+.detailButtonSolid:hover {
+  background: var(--color-marsala-dark);
+  border-color: var(--color-marsala-dark);
+}
+
+.detailButton svg {
+  width: clamp(0.9rem, 2cqh, 1.1rem);
+  height: clamp(0.9rem, 2cqh, 1.1rem);
+}
+
 .detailClosing {
   padding-bottom: 7cqh;
 }
@@ -313,18 +483,92 @@
   font-family: var(--font-script), "Brush Script MT", cursive;
   font-size: 6cqh;
   line-height: 1.1;
-  color: var(--color-primary);
+  color: var(--color-marsala);
 }
 
-/* ---------- Cover (embossed card) ---------- */
+/* ---------- Cover (two doors opening from the center) ---------- */
 
 .cover {
   position: absolute;
   inset: 0;
-  overflow: hidden;
   transform-style: preserve-3d;
-  background: linear-gradient(160deg, #faf4e9, #f1e8d7 55%, #e8dcc3);
-  box-shadow: 2px 3px 0 #ddd0b4, 10px 18px 34px -10px rgba(90, 70, 35, 0.35), inset 0 0 50px rgba(120, 95, 55, 0.08);
+}
+
+.coverPanel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.coverPanelLeft {
+  left: 0;
+  transform-origin: left center;
+}
+
+.coverPanelRight {
+  right: 0;
+  transform-origin: right center;
+}
+
+.coverFace {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.coverFaceFront {
+  box-shadow: 0 10px 20px rgba(90, 70, 35, 0.14);
+}
+
+.coverPanelLeft .coverFaceFront::after,
+.coverPanelRight .coverFaceFront::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  content: "";
+  pointer-events: none;
+}
+
+.coverPanelLeft .coverFaceFront::after {
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(100, 75, 45, 0.12));
+}
+
+.coverPanelRight .coverFaceFront::after {
+  left: 0;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.coverFaceBack {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, #ead8cc, #fff7f0 55%, #f0dfd2);
+  box-shadow: inset 0 0 30px rgba(104, 67, 54, 0.14), 0 10px 22px rgba(74, 47, 39, 0.18);
+}
+
+.coverFaceBack::after {
+  position: absolute;
+  inset: 0.7rem;
+  border: 1px solid rgba(163, 125, 68, 0.34);
+  content: "";
+}
+
+.coverArtwork {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(160deg, #fff9f4, #fff2e9 55%, #f2e2d5);
+  box-shadow: inset 0 0 50px rgba(147, 105, 77, 0.08);
+}
+
+.coverArtworkRight {
+  left: -100%;
 }
 
 .envelopeTexture {
@@ -337,40 +581,40 @@
 
 .coverFrame {
   position: absolute;
-  inset: 0.9rem;
-  border: 1px solid rgba(150, 125, 85, 0.35);
+  inset: clamp(0.9rem, 2.5vw, 2rem);
+  border: 1px solid rgba(167, 130, 75, 0.46);
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 1px 1px rgba(255, 255, 255, 0.5);
   pointer-events: none;
 }
 
 .coverFloral {
   position: absolute;
-  width: 60px;
-  height: 60px;
-  color: rgba(140, 115, 75, 0.32);
+  width: clamp(60px, 7vw, 100px);
+  height: clamp(60px, 7vw, 100px);
+  color: rgba(155, 120, 63, 0.57);
   filter: drop-shadow(1px 1px 0 rgba(255, 255, 255, 0.65));
 }
 
 .coverTopLeft {
-  top: 1.4rem;
-  left: 1.4rem;
+  top: clamp(1.4rem, 3vw, 3rem);
+  left: clamp(1.4rem, 3vw, 3rem);
 }
 
 .coverTopRight {
-  top: 1.4rem;
-  right: 1.4rem;
+  top: clamp(1.4rem, 3vw, 3rem);
+  right: clamp(1.4rem, 3vw, 3rem);
   transform: scaleX(-1);
 }
 
 .coverBottomLeft {
-  bottom: 1.4rem;
-  left: 1.4rem;
+  bottom: clamp(1.4rem, 3vw, 3rem);
+  left: clamp(1.4rem, 3vw, 3rem);
   transform: scaleY(-1);
 }
 
 .coverBottomRight {
-  bottom: 1.4rem;
-  right: 1.4rem;
+  bottom: clamp(1.4rem, 3vw, 3rem);
+  right: clamp(1.4rem, 3vw, 3rem);
   transform: scale(-1, -1);
 }
 
@@ -379,18 +623,22 @@
 .monogram {
   position: absolute;
   top: 30%;
-  left: 50%;
-  display: flex;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  justify-content: center;
-  transform: translate(-50%, -50%);
+  width: 100%;
+  transform: translateY(-50%);
+  white-space: nowrap;
 }
 
 .monogramLetter {
-  font-family: var(--font-monogram), cursive;
-  font-size: 5.2rem;
-  line-height: 1;
-  background: linear-gradient(150deg, #7c5a26 0%, #f0cf7e 22%, #fff3cd 38%, #d9a94e 54%, #8a611f 70%, #f3d585 86%, #b3852f 100%);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(5rem, 8vw, 9rem);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.9;
+  background: linear-gradient(150deg, #816135 0%, #c5a66b 22%, #f2dfb3 38%, #b99154 54%, #856338 70%, #ddc184 86%, #9b7745 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -398,39 +646,29 @@
 }
 
 .monogramLetter:first-child {
-  margin-right: -0.05rem;
-  transform: translateY(-4%) rotate(-3deg);
+  justify-self: end;
+  margin-right: clamp(1.1rem, 2vw, 2rem);
 }
 
 .monogramLetter:last-child {
-  margin-left: -0.05rem;
-  transform: translateY(4%) rotate(3deg);
-}
-
-.monogramAmp {
-  align-self: center;
-  margin: 0 0.2rem;
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
-  font-size: 1.7rem;
-  background: linear-gradient(150deg, #7c5a26 0%, #f0cf7e 22%, #fff3cd 38%, #d9a94e 54%, #8a611f 70%, #f3d585 86%, #b3852f 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 1px 1px rgba(76, 36, 30, 0.3));
+  justify-self: start;
+  margin-left: clamp(1.1rem, 2vw, 2rem);
 }
 
 .openHint {
   position: absolute;
   top: 47%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
   margin: 0;
   font-family: var(--font-serif), Georgia, serif;
-  font-size: 0.68rem;
+  font-size: clamp(0.7rem, 1.4vw, 0.95rem);
   letter-spacing: 0.32em;
+  text-align: center;
   text-transform: uppercase;
-  color: #a9793a;
+  white-space: nowrap;
+  color: #947249;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
@@ -439,44 +677,55 @@
 .ribbon {
   position: absolute;
   inset: 0;
+  z-index: 2;
   transform-style: preserve-3d;
 }
 
-.bandLeft,
-.bandRight {
+.band {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 60%;
-  height: 20%;
-  background:
-    linear-gradient(100deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 10%, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, 0.65) 32%, rgba(255, 255, 255, 0) 44%, rgba(255, 255, 255, 0) 62%, rgba(255, 255, 255, 0.55) 70%, rgba(255, 255, 255, 0) 82%),
-    linear-gradient(180deg, #fffdf8, #f2ecdf 50%, #e6ddc9);
-  box-shadow: 0 4px 12px rgba(110, 90, 55, 0.25);
-}
-
-.bandLeft {
-  clip-path: inset(0 50% 0 0);
-}
-
-.bandRight {
-  clip-path: inset(0 0 0 50%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 4px 7px rgba(71, 28, 40, 0.28));
+  pointer-events: none;
 }
 
 .bowWrap {
   position: absolute;
-  top: 68%;
+  top: 74%;
+  top: calc(70% + min(5.6vw, 4dvh, 38px));
   left: 50%;
   width: 62%;
+  width: min(62vw, 44dvh, 420px);
+  aspect-ratio: 1;
   transform: translate(-50%, -50%);
+  perspective: 850px;
+  transform-style: preserve-3d;
+}
+
+.bowMotion {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
 }
 
 .bow {
   display: block;
   width: 100%;
-  height: auto;
-  transform-origin: 50% 38%;
-  filter: drop-shadow(0 10px 14px rgba(90, 70, 40, 0.28));
+  height: 100%;
+  object-fit: contain;
+  filter: url(#bow-marsala-photo) drop-shadow(0 10px 14px rgba(69, 22, 36, 0.3));
+}
+
+.bowVector {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 8px 11px rgba(69, 22, 36, 0.28));
 }
 
 .bowShadow {
@@ -484,18 +733,23 @@
   top: 68%;
   left: 50%;
   width: 52%;
+  width: min(52vw, 340px);
   height: 22%;
+  height: min(22dvh, 150px);
   transform: translate(-50%, -35%);
-  background: radial-gradient(ellipse at center, rgba(80, 62, 38, 0.32), rgba(80, 62, 38, 0) 72%);
+  background: radial-gradient(ellipse at center, rgba(74, 26, 41, 0.34), rgba(74, 26, 41, 0) 72%);
   filter: blur(6px);
   pointer-events: none;
 }
 
 .openButton {
   position: absolute;
-  top: 68%;
+  z-index: 3;
+  top: 74%;
+  top: calc(70% + min(5.6vw, 4dvh, 38px));
   left: 50%;
-  width: 30%;
+  width: 62%;
+  width: min(62vw, 44dvh, 420px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
@@ -512,13 +766,21 @@
   outline-offset: 6px;
 }
 
-/* ---------- Below-card actions ---------- */
+/* ---------- Full-screen actions ---------- */
 
 .stageAction {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  bottom: 1.25rem;
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  left: 0;
   display: flex;
   min-height: 1.6rem;
   align-items: center;
   justify-content: center;
+  padding: 0 1rem;
+  pointer-events: none;
 }
 
 .scrollHint {
@@ -527,6 +789,7 @@
   align-items: center;
   gap: 0.4rem;
   color: var(--color-muted);
+  text-align: center;
 }
 
 .scrollHint span {
@@ -541,6 +804,7 @@
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
+  pointer-events: auto;
 }
 
 .revealedActions button,

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Heart, Menu, X } from "lucide-react";
 import { WEDDING } from "@/lib/wedding-config";
 
 type NavLink =
@@ -17,6 +17,7 @@ const LINKS: NavLink[] = [
   { kind: "anchor", id: "fotos", href: "/#fotos", label: "Fotos" },
   { kind: "anchor", id: "hospedagem", href: "/#hospedagem", label: "Hospedagem" },
   { kind: "anchor", id: "local", href: "/#local", label: "Local" },
+  { kind: "route", href: "/confirmar-presenca", label: "Confirmar presença" },
 ];
 
 const SECTION_IDS = ["presentes", "fotos", "hospedagem", "local"];
@@ -98,10 +99,20 @@ export default function NavBar() {
           className={`font-serif-display text-2xl italic transition-colors duration-500 ${
             transparent ? "text-white" : "text-[var(--foreground)]"
           }`}
+          aria-label={`${WEDDING.noivos.ela} e ${WEDDING.noivos.ele} - Início`}
           onClick={() => setOpen(false)}
         >
           {WEDDING.noivos.ela[0]}
-          <span className="mx-1 not-italic text-[var(--color-primary)]">|</span>
+          <span
+            aria-hidden="true"
+            className={`mx-1 inline-flex h-7 w-3 flex-col items-center justify-center align-middle not-italic ${
+              transparent ? "text-[#f4d6aa]" : "text-[var(--color-primary)]"
+            }`}
+          >
+            <span className="h-2 w-px bg-current" />
+            <Heart className="h-2.5 w-2.5 fill-current" strokeWidth={1.5} />
+            <span className="h-2 w-px bg-current" />
+          </span>
           {WEDDING.noivos.ele[0]}
         </Link>
 

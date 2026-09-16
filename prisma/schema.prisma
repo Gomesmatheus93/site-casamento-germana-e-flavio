@@ -63,3 +63,14 @@ model GuestPhoto {
   approved  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
+
+model Rsvp {
+  id             String   @id @default(cuid())
+  name           String
+  phone          String   @unique
+  attending      Boolean
+  guestCount     Int      @default(0)
+  companionNames String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

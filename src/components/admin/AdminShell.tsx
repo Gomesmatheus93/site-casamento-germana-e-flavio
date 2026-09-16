@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { LayoutDashboard, Gift, Images, ReceiptText, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Gift, Images, ReceiptText, ExternalLink, CalendarCheck } from "lucide-react";
 import AdminLogoutButton from "./AdminLogoutButton";
 
 const LINKS = [
   { href: "/admin", label: "Visão geral", icon: LayoutDashboard },
   { href: "/admin/presentes", label: "Presentes", icon: Gift },
   { href: "/admin/pedidos", label: "Pedidos", icon: ReceiptText },
+  { href: "/admin/confirmacoes", label: "Confirmações", icon: CalendarCheck },
   { href: "/admin/fotos", label: "Fotos dos convidados", icon: Images },
 ];
 
