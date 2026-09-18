@@ -21,10 +21,10 @@ export default function PhotosPageClient({
           <PhotoUploadForm onUploaded={(photo) => setPhotos((prev) => [photo, ...prev])} />
         </div>
       ) : (
-        <div className="mx-auto mb-12 max-w-xl border border-[var(--color-border)] p-8 text-center">
-          <p className="text-sm text-[var(--foreground)]/80">
-            O envio de fotos abre para todos os convidados logo após a cerimônia. Volte
-            aqui após o dia 01/11/2026 para compartilhar seus registros do grande dia!
+        <div className="mx-auto mb-12 max-w-xl border border-[var(--color-wine)] bg-[var(--color-wine)]/5 p-8 text-center">
+          <p className="text-sm font-medium text-[var(--color-wine)]">
+            Registre os momentos que você viver com a gente e compartilhe
+            suas fotos da nossa celebração neste álbum.
           </p>
         </div>
       )}

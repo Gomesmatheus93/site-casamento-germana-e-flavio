@@ -61,7 +61,7 @@ export default function HospedagemSection() {
         <div className="mt-20">
           <div className="flex items-center justify-center gap-2.5">
             <BedDouble className="h-5 w-5 text-[var(--color-gold-dark)]" strokeWidth={1.5} />
-            <h3 className="font-serif-display text-2xl italic text-[var(--foreground)]">
+            <h3 className="font-serif-display text-2xl italic text-[var(--color-wine)]">
               Hotéis sugeridos
             </h3>
           </div>
@@ -80,7 +80,7 @@ export default function HospedagemSection() {
         <div className="mt-24">
           <div className="flex items-center justify-center gap-2.5">
             <UtensilsCrossed className="h-5 w-5 text-[var(--color-wine)]" strokeWidth={1.5} />
-            <h3 className="font-serif-display text-2xl italic text-[var(--foreground)]">
+            <h3 className="font-serif-display text-2xl italic text-[var(--color-wine)]">
               Restaurantes recomendados
             </h3>
           </div>
