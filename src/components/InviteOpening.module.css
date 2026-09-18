@@ -24,6 +24,8 @@
   height: 100svh;
   height: 100dvh;
   overflow: hidden;
+  perspective: 1600px;
+  perspective-origin: 50% 46%;
   background: radial-gradient(ellipse at 35% 25%, #fffaf6, #f8ebe4 60%, var(--color-surface));
 }
 
@@ -31,6 +33,24 @@
   position: relative;
   height: 100svh;
   height: 100dvh;
+}
+
+/* Deepens only while the camera is pulled back, so the card reads as an
+   object resting on a surface instead of a full-bleed page. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 58%, rgba(120, 88, 62, 0) 38%, rgba(96, 68, 46, 0.28) 100%),
+    linear-gradient(180deg, #efe1d6, #e4d1c3 55%, #d9c3b3);
+  pointer-events: none;
+}
+
+.camera {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .card {
@@ -53,6 +73,9 @@
   overflow: hidden;
   /* The viewport is the query container for the full-screen invitation. */
   container-type: size;
+  /* Photo and printed panel are sized against each other so that, at rest,
+     the two together fill exactly one screen. */
+  --photo-h: clamp(30cqh, 80cqw, 39cqh);
   background: var(--color-card);
 }
 
@@ -76,11 +99,13 @@
 .photo {
   position: relative;
   width: 100%;
-  /* Portrait 2:3 photo: full width on phones, full height on wide screens. */
-  height: min(150cqw, 100cqh);
+  /* Taller than its resting height while the doors are still parting, so the
+     gap between them shows photograph rather than blank paper. */
+  height: calc(var(--photo-h) + var(--photo-grow, 0cqh));
   flex-shrink: 0;
   overflow: hidden;
   background: #e9dcd3;
+  will-change: height, transform;
 }
 
 /* Fill the slot; on wide screens the crop keeps the couple and the lit cross. */
@@ -89,106 +114,83 @@
   object-position: 50% 72%;
 }
 
+/* On a wide screen the slot is a short band, so the window has to sit much
+   higher in the portrait photograph to still frame the couple. */
+@container (min-aspect-ratio: 1/1) {
+  .photoImage {
+    object-position: 50% 57%;
+  }
+}
+
 .invitationBody {
   position: relative;
   display: flex;
-  width: min(100%, 600px);
-  min-height: 66cqh;
+  width: 100%;
+  min-height: calc(100cqh - var(--photo-h));
   flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-inline: auto;
-  padding: 3cqh clamp(1.25rem, 6cqw, 3rem) 2cqh;
+  padding: 2.4cqh clamp(1.25rem, 6cqw, 3rem) 2cqh;
   text-align: center;
+  will-change: transform, opacity;
 }
 
+/* The printed panel curves up over the photograph, like the arch on the card. */
 .invitationArch {
   position: absolute;
-  top: -4cqh;
+  top: -5cqh;
   left: 50%;
-  width: 8cqh;
-  height: 8cqh;
+  width: 150%;
+  height: 12cqh;
   transform: translateX(-50%);
-  border-radius: 50%;
+  border-radius: 50% 50% 0 0;
   background: var(--color-card);
 }
 
-.inviteFloral {
+.bodyLeaf {
   position: absolute;
-  width: 9cqh;
-  height: 9cqh;
+  bottom: 0.4cqh;
+  width: 7cqh;
+  height: 11cqh;
   color: var(--color-gold);
-  opacity: 0.75;
+  opacity: 0.5;
 }
 
-.inviteFloralLeft {
-  top: 1.4cqh;
-  left: 2cqw;
+.bodyLeafLeft {
+  left: 0.5cqw;
+  transform: rotate(34deg);
 }
 
-.inviteFloralRight {
-  top: 1.4cqh;
-  right: 2cqw;
-  transform: scaleX(-1);
+.bodyLeafRight {
+  right: 0.5cqw;
+  transform: rotate(-34deg) scaleX(-1);
 }
 
-.inviteMonogram {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  column-gap: clamp(0.6rem, 1.6cqh, 1rem);
-  width: clamp(8.5rem, 21cqh, 13rem);
-  margin: 2cqh 0;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(2.4rem, 5.4cqh, 4.2rem);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--color-marsala);
-}
-
-.inviteMonogram > span:first-child {
-  justify-self: end;
-}
-
-.inviteMonogram > span:last-child {
-  justify-self: start;
-}
-
-.inviteMonogramDivider {
-  display: flex;
-  height: clamp(1.8rem, 4.4cqh, 3rem);
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3cqh;
-  color: var(--color-marsala);
-}
-
-.inviteMonogramDivider span {
-  width: 1px;
-  flex: 1;
-  background: currentColor;
-}
-
-.inviteMonogramDivider svg {
-  width: clamp(0.55rem, 1.4cqh, 0.9rem);
-  height: clamp(0.55rem, 1.4cqh, 0.9rem);
+.flourish {
+  width: clamp(7rem, 26cqh, 12rem);
+  height: auto;
+  color: var(--color-gold-dark);
+  opacity: 0.85;
 }
 
 .verse {
-  max-width: 82%;
+  margin-top: 1.2cqh;
+  max-width: 94%;
   font-family: var(--font-serif), Georgia, serif;
-  font-size: 2.5cqh;
+  font-size: 2.1cqh;
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.4;
   color: var(--color-gold-dark);
 }
 
 .verseSource {
   margin-top: 0.6cqh;
-  font-size: 1.9cqh;
-  letter-spacing: 0.2em;
+  font-size: 1.6cqh;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--color-gold-dark);
+  opacity: 0.85;
 }
 
 .ornament {
@@ -208,27 +210,44 @@
   background: currentColor;
 }
 
+/* The sprig sits beside the names without pushing them off centre. */
+.namesRow {
+  position: relative;
+  margin-top: 1cqh;
+}
+
+.namesSprig {
+  position: absolute;
+  bottom: -1cqh;
+  left: 100%;
+  width: 7cqh;
+  height: 11cqh;
+  margin-left: -2cqh;
+  color: var(--color-gold);
+  opacity: 0.8;
+}
+
 .names {
   font-family: var(--font-script), "Brush Script MT", cursive;
-  font-size: 7.4cqh;
-  line-height: 1.02;
-  color: var(--color-marsala);
+  font-size: 6.6cqh;
+  line-height: 0.94;
+  color: var(--color-gold-dark);
 }
 
 .names span {
   display: block;
-  margin: 0.2cqh 0;
-  font-family: var(--font-serif), Georgia, serif;
+  margin: -0.6cqh 0;
+  font-family: var(--font-script), "Brush Script MT", cursive;
   font-size: 3cqh;
-  color: var(--color-marsala);
+  color: var(--color-gold-dark);
 }
 
 .facts {
   display: grid;
-  width: 100%;
+  width: min(100%, 34rem);
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 3cqh;
-  padding-top: 2.4cqh;
+  margin-top: 2cqh;
+  padding-top: 1.8cqh;
   border-top: 1px solid var(--color-border);
 }
 
@@ -236,8 +255,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5cqh;
-  padding: 0.4cqh 1.5cqw;
+  gap: 0.8cqh;
+  padding: 0.2cqh 1.5cqw;
 }
 
 .facts div + div {
@@ -245,28 +264,47 @@
 }
 
 .facts strong {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(0.85rem, min(2.5cqh, 4.2cqw), 1.4rem);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-size: clamp(0.5rem, min(1.55cqh, 2.6cqw), 0.78rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
   text-transform: uppercase;
   font-variant-numeric: lining-nums;
   font-feature-settings: "lnum";
-  color: var(--color-marsala);
-}
-
-.facts span {
-  font-size: clamp(0.62rem, 1.5cqh, 0.8rem);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-
-.factIcon {
-  width: clamp(1.1rem, 2.6cqh, 1.5rem);
-  height: clamp(1.1rem, 2.6cqh, 1.5rem);
   color: var(--color-gold-dark);
+}
+
+.factBadge {
+  display: flex;
+  width: clamp(1.6rem, 3.6cqh, 2.2rem);
+  height: clamp(1.6rem, 3.6cqh, 2.2rem);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-gold);
+  border-radius: 0.28em;
+  color: var(--color-gold-dark);
+}
+
+.factBadge svg {
+  width: 58%;
+  height: 58%;
+}
+
+.closingLine {
+  margin-top: 2cqh;
+  max-width: 90%;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.9cqh;
+  font-style: italic;
+  color: var(--color-gold-dark);
+}
+
+.churchMark {
+  width: clamp(1.5rem, 3.4cqh, 2.4rem);
+  height: auto;
+  margin-top: 1.4cqh;
+  color: var(--color-gold-dark);
+  opacity: 0.8;
 }
 
 .family {
@@ -344,12 +382,14 @@
 }
 
 .inviteLine {
-  margin-top: 3cqh;
-  max-width: 82%;
-  font-size: 2.3cqh;
-  line-height: 1.45;
-  color: var(--foreground);
-  opacity: 0.75;
+  margin-top: 2.4cqh;
+  max-width: 88%;
+  font-size: clamp(0.55rem, 1.7cqh, 0.85rem);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--color-gold-dark);
 }
 
 /* ---------- Details revealed while scrolling inside the card ---------- */
@@ -622,24 +662,26 @@
 
 /* ---------- Monogram ---------- */
 
+/* Interlocked script initials straddling the centre line, so the seam runs
+   through the monogram exactly as it does on a folded card. */
 .monogram {
   position: absolute;
   top: 30%;
   left: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   transform: translateY(-50%);
   white-space: nowrap;
 }
 
 .monogramLetter {
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(5rem, 8vw, 9rem);
-  font-weight: 500;
+  font-family: var(--font-monogram), "Pinyon Script", cursive;
+  font-size: clamp(8rem, 17vw, 16rem);
+  font-weight: 400;
   letter-spacing: 0;
-  line-height: 0.9;
+  line-height: 0.78;
   background: linear-gradient(150deg, #816135 0%, #c5a66b 22%, #f2dfb3 38%, #b99154 54%, #856338 70%, #ddc184 86%, #9b7745 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -648,13 +690,12 @@
 }
 
 .monogramLetter:first-child {
-  justify-self: end;
-  margin-right: clamp(1.1rem, 2vw, 2rem);
+  transform: translateY(-0.08em);
 }
 
 .monogramLetter:last-child {
-  justify-self: start;
-  margin-left: clamp(1.1rem, 2vw, 2rem);
+  margin-left: -0.24em;
+  transform: translateY(0.1em);
 }
 
 .openHint {

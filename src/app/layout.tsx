@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter, Sacramento } from "next/font/google";
+import { Cormorant_Garamond, Inter, Pinyon_Script, Sacramento } from "next/font/google";
 import "./globals.css";
 import SiteChrome from "@/components/SiteChrome";
 
@@ -22,6 +22,12 @@ const sacramento = Sacramento({
   weight: ["400"],
 });
 
+const pinyonScript = Pinyon_Script({
+  variable: "--font-monogram",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "Germana & Flávio | 01.11.2026",
   description:
@@ -32,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
-      className={`${cormorant.variable} ${inter.variable} ${sacramento.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${inter.variable} ${sacramento.variable} ${pinyonScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteChrome>{children}</SiteChrome>

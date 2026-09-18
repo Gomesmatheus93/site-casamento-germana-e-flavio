@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarCheck, CalendarDays, ChevronDown, Church, Clock, Gift, HandHeart, Heart, MapPin, RotateCcw, Wine } from "lucide-react";
+import { CalendarCheck, CalendarDays, ChevronDown, Church, Clock, Gift, HandHeart, MapPin, RotateCcw, Wine } from "lucide-react";
 import { WEDDING } from "@/lib/wedding-config";
 import styles from "./InviteOpening.module.css";
 
@@ -163,6 +163,41 @@ function FloralCorner({ className = "" }: { className?: string }) {
   );
 }
 
+function BotanicalSprig({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 120 190" fill="none" aria-hidden="true">
+      <path d="M77 6C64 47 55 100 49 184" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <g stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round">
+        <path d="M72 28c12-13 27-15 36-11-6 14-22 20-36 11ZM68 44c-13-9-27-7-34-1 9 11 24 12 34 1ZM64 66c13-14 29-16 39-12-7 15-24 22-39 12ZM60 84c-14-9-29-7-36 0 9 12 26 13 36 0ZM56 108c14-14 30-16 40-12-7 15-25 22-40 12ZM53 128c-14-9-29-7-36 0 10 12 26 13 36 0ZM50 152c13-13 28-15 38-11-7 14-24 21-38 11Z" fill="currentColor" fillOpacity=".14" />
+      </g>
+    </svg>
+  );
+}
+
+function Flourish({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 220 26" fill="none" aria-hidden="true">
+      <path d="M4 17c22 0 33-10 47-10 9 0 13 5 20 5M216 17c-22 0-33-10-47-10-9 0-13 5-20 5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M26 17c8 5 17 4 22-2M194 17c-8 5-17 4-22-2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+      <path d="M110 5c3-4 10-3 10 3 0 5-7 9-10 12-3-3-10-7-10-12 0-6 7-7 10-3Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ChurchMark({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 120 92" fill="none" aria-hidden="true">
+      <g stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M60 4v14M54 10h12" />
+        <path d="M60 18 44 38v48h32V38L60 18Z" />
+        <path d="M44 44 26 60v26h18M76 44l18 16v26H76" />
+        <path d="M60 86V66c-5 0-8 3-8 8v12h16V74c0-5-3-8-8-8Z" />
+        <path d="M60 40c-4 0-7 3-7 7s3 7 7 7 7-3 7-7-3-7-7-7ZM34 70h6M80 70h6" />
+      </g>
+    </svg>
+  );
+}
+
 function PaperGrain() {
   return (
     <svg width="0" height="0" className="absolute" aria-hidden="true">
@@ -196,10 +231,11 @@ function SatinBow({ progress }: { progress: number }) {
     ? morphPath(bowPaths.knot[0], bowPaths.knot[1], loosen)
     : morphPath(bowPaths.knot[1], bowPaths.knot[2], release);
 
-  // The intact band drops on its own after the bow has disappeared.
-  const bandFallTime = clamp((progress - .45) / .25);
+  // The intact band drops on its own after the bow has disappeared, and is
+  // gone from frame before the doors start to part.
+  const bandFallTime = clamp((progress - .40) / .13);
   const bandPath = fallingRibbonPath(bandFallTime);
-  const bandFade = phase(progress, .67, .72);
+  const bandFade = phase(progress, .49, .55);
 
   return (
     <div className={styles.ribbon} aria-hidden="true">
@@ -359,10 +395,15 @@ export default function InviteOpening() {
   // The first stretch of scroll opens the card; the rest reads through it.
   const scrollOpen = clamp(scrollProgress / OPEN_SHARE);
   const progress = reducedMotion ? (playProgress > 0 || scrollOpen > .06 ? 1 : 0) : Math.max(scrollOpen, playProgress);
-  const reveal = phase(progress, .73, .99);
+  const reveal = phase(progress, .46, .87);
   // After turning edge-on, each door shows its reverse side and slips behind the card.
   const foldBack = phase(reveal, .48, 1);
   const tuck = phase(reveal, .68, 1);
+  // The camera drifts back while the doors swing, so the card reads as a
+  // physical object, then settles forward again as the details take the frame.
+  const dolly = phase(progress, .40, .70) - phase(progress, .80, 1);
+  const rise = phase(progress, .63, .97);
+  const ink = phase(progress, .67, .93);
   const revealed = progress >= .99;
   const read = reducedMotion ? 0 : clamp((scrollProgress - OPEN_SHARE) / (1 - OPEN_SHARE));
 
@@ -391,33 +432,38 @@ export default function InviteOpening() {
   return (
     <div ref={sceneRef} className={`${styles.scene} ${reducedMotion ? styles.reducedScene : ""}`}>
       <div className={styles.stage}>
-        <div className={styles.card}>
+        <div className={styles.backdrop} style={{ opacity: dolly }} aria-hidden="true" />
+        <div
+          className={styles.camera}
+          style={{ transform: `translate3d(0,${dolly * -1.4}%,0) rotateX(${dolly * 6}deg) scale(${1 - dolly * .26})` }}
+        >
+        <div className={styles.card} style={{ boxShadow: `0 ${dolly * 52}px ${dolly * 80}px -${dolly * 24}px rgba(74, 47, 33, ${dolly * .42})` }}>
           <article className={styles.invitation} aria-hidden={!revealed}>
-            <div ref={scrollerRef} className={styles.invitationScroll} style={{ transform: `translate3d(0,${-read * overflow}px,0)` }}>
+            <div
+              ref={scrollerRef}
+              className={styles.invitationScroll}
+              style={{ "--photo-grow": `${(1 - rise) * 62}cqh`, transform: `translate3d(0,${-read * overflow}px,0)` } as CSSProperties}
+            >
               <div className={styles.photo}><Image src="/foto-convite.jpg" alt="Germana e Flávio se beijando" fill priority sizes="100vw" className={styles.photoImage} /></div>
-              <div className={styles.invitationBody}>
+              <div className={styles.invitationBody} style={{ transform: `translate3d(0,${(1 - rise) * 16}cqh,0)`, opacity: ink }}>
                 <div className={styles.invitationArch} />
-                <FloralCorner className={`${styles.inviteFloral} ${styles.inviteFloralLeft}`} />
-                <FloralCorner className={`${styles.inviteFloral} ${styles.inviteFloralRight}`} />
-                <div className={styles.inviteMonogram} aria-hidden="true">
-                  <span>G</span>
-                  <span className={styles.inviteMonogramDivider}>
-                    <span />
-                    <Heart fill="currentColor" strokeWidth={1} />
-                    <span />
-                  </span>
-                  <span>F</span>
+                <BotanicalSprig className={`${styles.bodyLeaf} ${styles.bodyLeafLeft}`} />
+                <BotanicalSprig className={`${styles.bodyLeaf} ${styles.bodyLeafRight}`} />
+                <Flourish className={styles.flourish} />
+                <p className={styles.verse}>“Eu encontrei aquele a quem meu coração ama”</p>
+                <p className={styles.verseSource}>— Cânticos 3:4 —</p>
+                <div className={styles.namesRow}>
+                  <h1 className={styles.names}>{WEDDING.noivos.ela}<span>&amp;</span>{WEDDING.noivos.ele}</h1>
+                  <BotanicalSprig className={styles.namesSprig} />
                 </div>
-                <p className={styles.verse}>“Encontrei aquele a quem meu coração ama”</p>
-                <p className={styles.verseSource}>CÂNTICOS 3:4</p>
-                <div className={styles.ornament}><span />♥<span /></div>
-                <h1 className={styles.names}>{WEDDING.noivos.ela}<span>&amp;</span>{WEDDING.noivos.ele}</h1>
                 <p className={styles.inviteLine}>Convidam para celebrar o seu casamento</p>
                 <div className={styles.facts}>
-                  <div><CalendarDays className={styles.factIcon} strokeWidth={1.4} /><strong>01 NOV 2026</strong><span>Domingo</span></div>
-                  <div><Clock className={styles.factIcon} strokeWidth={1.4} /><strong>{WEDDING.horario}</strong><span>Cerimônia</span></div>
-                  <div><MapPin className={styles.factIcon} strokeWidth={1.4} /><strong>Mossoró</strong><span>Rio Grande do Norte</span></div>
+                  <div><span className={styles.factBadge}><CalendarDays strokeWidth={1.4} /></span><strong>01 de novembro<br />de 2026</strong></div>
+                  <div><span className={styles.factBadge}><Clock strokeWidth={1.4} /></span><strong>Às {WEDDING.horario}</strong></div>
+                  <div><span className={styles.factBadge}><MapPin strokeWidth={1.4} /></span><strong>Sagrado Coração<br />de Jesus<br />Mossoró, RN</strong></div>
                 </div>
+                <p className={styles.closingLine}>Sua presença tornará este dia ainda mais especial!</p>
+                <ChurchMark className={styles.churchMark} />
               </div>
 
               <section className={styles.family} aria-label="Pais dos noivos">
@@ -528,6 +574,7 @@ export default function InviteOpening() {
             <SatinBow progress={progress} />
             <button type="button" className={styles.openButton} onClick={() => reducedMotion ? setPlayProgress(1) : setPlaying(true)} disabled={playing || progress > .05} aria-label="Abrir o convite de Germana e Flávio" />
           </div>
+        </div>
         </div>
         {(!revealed || read >= .97 || reducedMotion) && (
           <div className={styles.stageAction}>
