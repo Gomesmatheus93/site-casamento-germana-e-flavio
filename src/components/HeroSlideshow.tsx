@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  { src: "/foto-da-capa.jpg", position: "center 42%" },
-  { src: "/DSCF3255.jpg", position: "center 43%" },
-  { src: "/DSCF8178.jpg", position: "center 55%" },
-  { src: "/DSCF8260.jpg", position: "center 28%" },
+  { src: "/1.jpg", position: "50% 30%" },
+  { src: "/2.jpeg", position: "50% 32%" },
+  { src: "/4.jpeg", position: "48% 25%" },
+  { src: "/6.jpeg", position: "52% 28%" },
+  { src: "/9.jpeg", position: "50% 28%" },
+  { src: "/3.jpeg", position: "50% 30%" },
 ];
 
 const INTERVAL_MS = 6000;
