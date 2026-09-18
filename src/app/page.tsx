@@ -4,6 +4,7 @@ import Countdown from "@/components/Countdown";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import PresentesSection from "@/components/sections/PresentesSection";
 import FotosSection from "@/components/sections/FotosSection";
+import BelezaSection from "@/components/sections/BelezaSection";
 import HospedagemSection from "@/components/sections/HospedagemSection";
 import LocalSection from "@/components/sections/LocalSection";
 import { PHOTOS_UNLOCK_DATE, WEDDING } from "@/lib/wedding-config";
@@ -92,6 +93,8 @@ export default async function Home() {
         unlocked={photosUnlocked}
         photos={guestPhotos.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() }))}
       />
+
+      <BelezaSection />
 
       <HospedagemSection />
 

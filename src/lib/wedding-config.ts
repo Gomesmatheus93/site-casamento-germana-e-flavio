@@ -60,6 +60,26 @@ export const LOGISTICA = {
   ],
 };
 
+export type Salao = {
+  nome: string;
+  endereco: string;
+  mapsQuery: string;
+  destaque: string;
+  instagramUrl?: string;
+};
+
+export const SALOES: Salao[] = [
+  {
+    nome: "Vanessa Marinho Beauty Studio",
+    endereco: "Rua Gilberto Marcelino Sobrinho, 27 - Nova Betânia, Mossoró - RN",
+    mapsQuery:
+      "Vanessa Marinho Beauty Studio, Rua Gilberto Marcelino Sobrinho, 27, Nova Betânia, Mossoró - RN",
+    destaque:
+      "Sugestão para as convidadas se arrumarem antes da festa: cabelo, maquiagem e estética.",
+    instagramUrl: "https://www.instagram.com/vanessamarinhobeautystudio/",
+  },
+];
+
 export type Hotel = {
   nome: string;
   categoria: string;

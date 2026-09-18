@@ -44,7 +44,7 @@ function RestauranteCard({ r }: { r: Restaurante }) {
 
 export default function HospedagemSection() {
   return (
-    <section id="hospedagem" className="border-t border-[var(--color-border)] px-5 py-24">
+    <section id="hospedagem" className="px-5 py-24">
       <div className="mx-auto max-w-6xl">
         <header className="text-center">
           <p className="eyebrow">Para quem vem de fora</p>
