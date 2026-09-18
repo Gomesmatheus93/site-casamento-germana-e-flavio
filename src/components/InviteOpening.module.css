@@ -682,12 +682,13 @@
 }
 
 /* The gradient is clipped to the glyphs, so its painting box has to be
-   roomier than the text box or the script's swashes come out sliced off. */
+   roomier than the text box or the italic's tails come out sliced off. */
 .monogramLetter {
-  padding: 0.35em 0.12em;
-  font-family: var(--font-monogram), "Pinyon Script", cursive;
-  font-size: clamp(7rem, 15vw, 14rem);
-  font-weight: 400;
+  padding: 0.3em 0.1em;
+  font-family: var(--font-monogram), Georgia, serif;
+  font-size: clamp(6rem, 13vw, 12rem);
+  font-style: italic;
+  font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
   background: linear-gradient(150deg, #816135 0%, #c5a66b 22%, #f2dfb3 38%, #b99154 54%, #856338 70%, #ddc184 86%, #9b7745 100%);
@@ -697,13 +698,8 @@
   filter: drop-shadow(0 1px 1px rgba(76, 36, 30, 0.3));
 }
 
-.monogramLetter:first-child {
-  transform: translateY(-0.06em);
-}
-
 .monogramLetter:last-child {
-  margin-left: -0.1em;
-  transform: translateY(0.08em);
+  margin-left: 0.14em;
 }
 
 .openHint {
