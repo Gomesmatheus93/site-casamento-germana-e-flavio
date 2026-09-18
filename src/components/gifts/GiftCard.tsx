@@ -3,12 +3,6 @@
 import type { Gift } from "@/types/gift";
 import { formatBRL } from "@/lib/format";
 
-const STATUS_LABEL: Record<Gift["status"], string> = {
-  DISPONIVEL: "Disponível",
-  RESERVADO: "Reservado",
-  COMPRADO: "Presenteado",
-};
-
 export default function GiftCard({
   gift,
   onSelect,
@@ -16,8 +10,6 @@ export default function GiftCard({
   gift: Gift;
   onSelect: (gift: Gift) => void;
 }) {
-  const disabled = gift.status === "COMPRADO";
-
   return (
     <div className="flex flex-col border border-[var(--color-border)] bg-white transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_-18px_rgba(34,42,31,0.35)]">
       <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--color-primary)]/5">
@@ -35,11 +27,6 @@ export default function GiftCard({
             </span>
           </div>
         )}
-        {gift.status !== "DISPONIVEL" && (
-          <span className="absolute left-0 top-0 bg-[var(--foreground)] px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--background)]">
-            {STATUS_LABEL[gift.status]}
-          </span>
-        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-5">
@@ -54,13 +41,8 @@ export default function GiftCard({
           <span className="font-serif-display text-lg text-[var(--foreground)]">
             {formatBRL(gift.valor)}
           </span>
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(gift)}
-            className="btn-outline !px-4 !py-2"
-          >
-            {disabled ? "Presenteado" : "Presentear"}
+          <button type="button" onClick={() => onSelect(gift)} className="btn-outline !px-4 !py-2">
+            Presentear
           </button>
         </div>
       </div>

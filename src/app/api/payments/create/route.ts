@@ -70,12 +70,6 @@ export async function POST(req: NextRequest) {
   if (!gift) {
     return NextResponse.json({ error: "Presente não encontrado." }, { status: 404 });
   }
-  if (gift.status === "COMPRADO") {
-    return NextResponse.json(
-      { error: "Este presente já foi comprado por outra pessoa." },
-      { status: 409 }
-    );
-  }
 
   const isPix = formData.payment_method_id === "pix";
   const method: PaymentMethod = isPix ? "PIX" : "CARTAO";
