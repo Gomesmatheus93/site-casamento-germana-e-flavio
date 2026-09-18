@@ -552,7 +552,7 @@ export default function InviteOpening() {
             </div>
           </article>
 
-          <div className={styles.cover} aria-hidden={revealed} style={{ visibility: reveal === 1 ? "hidden" : "visible", pointerEvents: revealed ? "none" : "auto" }}>
+          <div className={styles.cover} aria-hidden={revealed} style={{ "--seam": String(phase(progress, .42, .54)), visibility: reveal === 1 ? "hidden" : "visible", pointerEvents: revealed ? "none" : "auto" } as CSSProperties}>
             <PaperGrain />
             {(["left", "right"] as const).map((side) => (
               <div

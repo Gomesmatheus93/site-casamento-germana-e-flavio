@@ -562,16 +562,21 @@
   backface-visibility: hidden;
 }
 
+/* Each half only casts its own shadow once it is a separate door; while the
+   card is closed that shadow would darken the centre and betray the fold. */
 .coverFaceFront {
-  box-shadow: 0 10px 20px rgba(90, 70, 35, 0.14);
+  box-shadow: 0 10px 20px rgba(90, 70, 35, calc(0.14 * var(--seam, 0)));
 }
 
+/* The fold only exists once the card is being opened; while it is closed the
+   two halves have to read as one uncut sheet of paper. */
 .coverPanelLeft .coverFaceFront::after,
 .coverPanelRight .coverFaceFront::after {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 12px;
+  opacity: var(--seam, 0);
   content: "";
   pointer-events: none;
 }
@@ -676,12 +681,15 @@
   white-space: nowrap;
 }
 
+/* The gradient is clipped to the glyphs, so its painting box has to be
+   roomier than the text box or the script's swashes come out sliced off. */
 .monogramLetter {
+  padding: 0.35em 0.12em;
   font-family: var(--font-monogram), "Pinyon Script", cursive;
-  font-size: clamp(8rem, 17vw, 16rem);
+  font-size: clamp(7rem, 15vw, 14rem);
   font-weight: 400;
   letter-spacing: 0;
-  line-height: 0.78;
+  line-height: 1;
   background: linear-gradient(150deg, #816135 0%, #c5a66b 22%, #f2dfb3 38%, #b99154 54%, #856338 70%, #ddc184 86%, #9b7745 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -690,12 +698,12 @@
 }
 
 .monogramLetter:first-child {
-  transform: translateY(-0.08em);
+  transform: translateY(-0.06em);
 }
 
 .monogramLetter:last-child {
-  margin-left: -0.24em;
-  transform: translateY(0.1em);
+  margin-left: -0.1em;
+  transform: translateY(0.08em);
 }
 
 .openHint {
