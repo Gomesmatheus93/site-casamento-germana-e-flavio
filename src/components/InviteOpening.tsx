@@ -207,6 +207,16 @@ function PaperGrain() {
         <feComponentTransfer><feFuncA type="linear" slope="0.1" /></feComponentTransfer>
         <feBlend in="SourceGraphic" mode="multiply" />
       </filter>
+      {/* Defined once here because each door renders its own copy of the cover. */}
+      <linearGradient id="monogram-gold" x1="0" y1="0" x2="0.62" y2="1">
+        <stop offset="0" stopColor="#816135" />
+        <stop offset=".22" stopColor="#c5a66b" />
+        <stop offset=".38" stopColor="#f2dfb3" />
+        <stop offset=".54" stopColor="#b99154" />
+        <stop offset=".7" stopColor="#856338" />
+        <stop offset=".86" stopColor="#ddc184" />
+        <stop offset="1" stopColor="#9b7745" />
+      </linearGradient>
     </svg>
   );
 }
@@ -292,6 +302,21 @@ function SatinBow({ progress }: { progress: number }) {
   );
 }
 
+// The initials are carried as outlines rather than text: Lucida Calligraphy
+// ships with Windows and is absent from phones, where a font stack would
+// silently fall back to some other face. Drawn as paths they are identical
+// on every device, and the gradient is the same gold used on the cover.
+const MONOGRAM_PATH =
+  "M17.285 15.674L25.586 11.035Q31.445 16.406 40.625 16.406Q47.070 16.406 50.513 12.622Q53.955 8.838 56.104-0.537Q56.250-1.172 56.543-2.393Q47.852 0.049 38.379 0.049Q25.830 0.049 18.579-7.178Q11.328-14.404 11.328-26.855Q11.328-46.338 24.902-60.229Q38.477-74.121 57.617-74.121Q68.506-74.121 78.857-71.338L74.951-58.447L71.973-58.447Q72.168-60.156 72.168-61.426Q72.168-65.771 67.480-68.433Q62.793-71.094 55.127-71.094Q42.041-71.094 32.104-57.910Q22.168-44.727 22.168-27.393Q22.168-16.797 28.516-10.669Q34.863-4.541 45.801-4.541Q52.539-4.541 57.275-6.055L62.109-30.420L53.467-30.420Q44.873-30.420 37.842-24.902L38.477-28.271Q47.266-36.768 56.055-36.768L73.535-36.768L69.727-21.680L67.432-10.156Q64.258 5.664 56.226 13.062Q48.193 20.459 34.180 20.459Q23.633 20.459 17.285 15.674 M152.441-33.447L144.580-33.447L148.047-37.354L153.223-37.354L159.375-68.457Q149.365-68.457 143.140-63.062Q136.914-57.666 136.914-48.975L136.963-47.900L127.441-43.311Q128.711-58.301 139.087-65.283Q149.463-72.266 170.410-72.266L198.584-72.266L194.189-58.447L191.064-58.447Q191.699-60.400 191.699-62.305Q191.699-68.652 171.729-68.652L169.629-68.652L163.428-37.354L184.717-37.354L179.883-32.373Q172.070-33.447 165.039-33.447L162.646-33.447L159.814-19.141Q156.250-1.074 146.021 9.717Q135.791 20.508 122.217 20.508Q114.893 20.508 109.131 14.990L116.309 7.666Q120.166 15.674 128.711 15.674Q136.523 15.674 140.991 8.618Q145.459 1.563 149.023-16.357";
+
+function Monogram() {
+  return (
+    <svg className={styles.monogram} viewBox="8 -75 192 97" role="img" aria-label="G F">
+      <path d={MONOGRAM_PATH} fill="url(#monogram-gold)" />
+    </svg>
+  );
+}
+
 function CoverArtwork() {
   return (
     <>
@@ -301,10 +326,7 @@ function CoverArtwork() {
       <FloralCorner className={`${styles.coverFloral} ${styles.coverTopRight}`} />
       <FloralCorner className={`${styles.coverFloral} ${styles.coverBottomLeft}`} />
       <FloralCorner className={`${styles.coverFloral} ${styles.coverBottomRight}`} />
-      <div className={styles.monogram}>
-        <span className={styles.monogramLetter}>G</span>
-        <span className={styles.monogramLetter}>F</span>
-      </div>
+      <Monogram />
       <p className={styles.openHint}>TOQUE PARA ABRIR</p>
     </>
   );
