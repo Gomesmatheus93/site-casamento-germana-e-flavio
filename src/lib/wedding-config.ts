@@ -75,7 +75,7 @@ export const SALOES: Salao[] = [
     mapsQuery:
       "Vanessa Marinho Beauty Studio, Rua Gilberto Marcelino Sobrinho, 27, Nova Betânia, Mossoró - RN",
     destaque:
-      "Sugestão para as convidadas se arrumarem antes da festa: cabelo, maquiagem e estética.",
+      "",
     instagramUrl: "https://www.instagram.com/vanessamarinhobeautystudio/",
   },
 ];

@@ -1,4 +1,5 @@
-import { ExternalLink, MapPin, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { ExternalLink, MapPin } from "lucide-react";
 import { SALOES, type Salao } from "@/lib/wedding-config";
 
 function SalaoBlock({ salao }: { salao: Salao }) {
@@ -12,9 +13,13 @@ function SalaoBlock({ salao }: { salao: Salao }) {
   return (
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="flex flex-col justify-center gap-4 border border-[var(--color-border)] bg-white p-8 lg:col-span-2">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-secondary)]/12 text-[var(--color-secondary)]">
-          <Sparkles className="h-5 w-5" strokeWidth={1.5} />
-        </span>
+        <Image
+          src="/vanessa-marinho-logo.png"
+          alt={salao.nome}
+          width={886}
+          height={242}
+          className="-ml-1 h-12 w-auto object-contain object-left"
+        />
         <p className="eyebrow">Salão de beleza</p>
         <h3 className="-mt-2 font-serif-display text-2xl text-[var(--foreground)]">
           {salao.nome}
@@ -62,7 +67,7 @@ export default function BelezaSection() {
         <header className="text-center">
           <p className="eyebrow">Sugestão para as convidadas</p>
           <h2 className="mt-4 font-serif-display text-5xl italic text-[var(--foreground)]">
-            Para se arrumar antes da festa
+            Sua produção para o grande dia!
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-[var(--foreground)]/70">
             Deixamos essa sugestão de salão em Mossoró - RN para quem quiser fazer cabelo,
