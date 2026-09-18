@@ -535,6 +535,10 @@ export default function InviteOpening() {
                 </p>
               </section>
 
+              <div className={styles.stretchBanner}>
+                <Image src="/8.jpeg" alt="Mãos dadas dos noivos diante da cruz" fill sizes="100vw" className={styles.stretchBannerImage} />
+              </div>
+
               <section className={styles.detail}>
                 <CalendarCheck className={styles.detailIcon} strokeWidth={1.4} />
                 <p className={styles.detailEyebrow}>Confirmação de presença</p>

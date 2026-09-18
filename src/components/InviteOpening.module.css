@@ -513,6 +513,21 @@
   height: clamp(0.9rem, 2cqh, 1.1rem);
 }
 
+/* Breaks out of the centred column to run edge-to-edge, and crops the
+   portrait source down to a short strip so the frame reads as stretched
+   from one side to the other. */
+.stretchBanner {
+  position: relative;
+  width: 100%;
+  height: 22cqh;
+  margin: 5cqh 0;
+}
+
+.stretchBannerImage {
+  object-fit: cover;
+  object-position: 50% 62%;
+}
+
 .detailClosing {
   padding-bottom: 7cqh;
 }
