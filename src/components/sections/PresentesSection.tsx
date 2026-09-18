@@ -6,7 +6,7 @@ export default function PresentesSection({ gifts }: { gifts: Gift[] }) {
     <section id="presentes" className="border-t border-[var(--color-border)] px-5 py-24">
       <div className="mx-auto max-w-6xl">
         <header className="mb-16 text-center">
-          <p className="eyebrow">Com carinho</p>
+          <p className="eyebrow"></p>
           <h2 className="mt-4 font-serif-display text-5xl italic text-[var(--foreground)]">
             Lista de Presentes
           </h2>
