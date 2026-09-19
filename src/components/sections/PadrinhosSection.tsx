@@ -3,7 +3,7 @@ import { Info } from "lucide-react";
 
 export default function PadrinhosSection() {
   return (
-    <section id="padrinhos" className="border-t border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-24">
+    <section className="bg-[var(--color-surface)] px-5 py-20 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <header className="text-center">
           <p className="eyebrow">Para os padrinhos e madrinhas</p>

@@ -6,7 +6,6 @@ import HeroSlideshow from "@/components/HeroSlideshow";
 import PresentesSection from "@/components/sections/PresentesSection";
 import FotosSection from "@/components/sections/FotosSection";
 import BelezaSection from "@/components/sections/BelezaSection";
-import PadrinhosSection from "@/components/sections/PadrinhosSection";
 import HospedagemSection from "@/components/sections/HospedagemSection";
 import LocalSection from "@/components/sections/LocalSection";
 import { PHOTOS_UNLOCK_DATE, WEDDING } from "@/lib/wedding-config";
@@ -92,8 +91,6 @@ export default async function Home() {
       <FotosSection unlocked={photosUnlocked} photos={guestPhotos} />
 
       <BelezaSection />
-
-      <PadrinhosSection />
 
       <HospedagemSection />
 
