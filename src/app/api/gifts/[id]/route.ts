@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import { requireAdmin } from "@/lib/require-admin";
+import type { Gift } from "@/types/gift";
 
 const giftUpdateSchema = z.object({
   nome: z.string().min(2).max(120).optional(),
@@ -18,11 +21,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const gift = await prisma.gift.findUnique({ where: { id } });
-  if (!gift) {
+  const snap = await db.collection("gifts").doc(id).get();
+  if (!snap.exists) {
     return NextResponse.json({ error: "Presente não encontrado." }, { status: 404 });
   }
-  return NextResponse.json(gift);
+  return NextResponse.json(docToObject<Gift>(snap));
 }
 
 export async function PUT(
@@ -42,12 +45,15 @@ export async function PUT(
     );
   }
 
-  try {
-    const gift = await prisma.gift.update({ where: { id }, data: parsed.data });
-    return NextResponse.json(gift);
-  } catch {
+  const ref = db.collection("gifts").doc(id);
+  const existing = await ref.get();
+  if (!existing.exists) {
     return NextResponse.json({ error: "Presente não encontrado." }, { status: 404 });
   }
+
+  await ref.update({ ...parsed.data, updatedAt: FieldValue.serverTimestamp() });
+  const snap = await ref.get();
+  return NextResponse.json(docToObject<Gift>(snap));
 }
 
 export async function DELETE(
@@ -58,11 +64,17 @@ export async function DELETE(
   if (unauthorized) return unauthorized;
 
   const { id } = await params;
-  try {
-    await prisma.payment.deleteMany({ where: { giftId: id } });
-    await prisma.gift.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch {
+  const ref = db.collection("gifts").doc(id);
+  const existing = await ref.get();
+  if (!existing.exists) {
     return NextResponse.json({ error: "Presente não encontrado." }, { status: 404 });
   }
+
+  const paymentsSnap = await db.collection("payments").where("giftId", "==", id).get();
+  const batch = db.batch();
+  paymentsSnap.docs.forEach((doc) => batch.delete(doc.ref));
+  batch.delete(ref);
+  await batch.commit();
+
+  return NextResponse.json({ ok: true });
 }

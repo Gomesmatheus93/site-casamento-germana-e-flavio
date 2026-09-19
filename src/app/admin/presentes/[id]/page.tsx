@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
 import GiftForm from "@/components/admin/GiftForm";
+import type { Gift } from "@/types/gift";
 
 export default async function EditarPresentePage({
   params,
@@ -9,8 +11,8 @@ export default async function EditarPresentePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const gift = await prisma.gift.findUnique({ where: { id } });
-  if (!gift) notFound();
+  const snap = await db.collection("gifts").doc(id).get();
+  if (!snap.exists) notFound();
 
   return (
     <AdminShell>
@@ -18,13 +20,7 @@ export default async function EditarPresentePage({
         Editar presente
       </h1>
       <div className="mt-6 max-w-2xl rounded-2xl border border-[var(--color-border)] bg-white p-6">
-        <GiftForm
-          gift={{
-            ...gift,
-            createdAt: gift.createdAt.toISOString(),
-            updatedAt: gift.updatedAt.toISOString(),
-          }}
-        />
+        <GiftForm gift={docToObject<Gift>(snap)} />
       </div>
     </AdminShell>
   );

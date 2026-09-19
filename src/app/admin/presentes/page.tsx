@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
 import { formatBRL } from "@/lib/format";
+import type { Gift } from "@/types/gift";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default async function AdminPresentesPage() {
-  const gifts = await prisma.gift.findMany({ orderBy: { createdAt: "desc" } });
+  const snap = await db.collection("gifts").orderBy("createdAt", "desc").get();
+  const gifts = snap.docs.map((d) => docToObject<Gift>(d));
 
   return (
     <AdminShell>

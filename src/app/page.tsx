@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import Countdown from "@/components/Countdown";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import PresentesSection from "@/components/sections/PresentesSection";
@@ -8,6 +10,7 @@ import BelezaSection from "@/components/sections/BelezaSection";
 import HospedagemSection from "@/components/sections/HospedagemSection";
 import LocalSection from "@/components/sections/LocalSection";
 import { PHOTOS_UNLOCK_DATE, WEDDING } from "@/lib/wedding-config";
+import type { Gift } from "@/types/gift";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +18,13 @@ export default async function Home() {
   // eslint-disable-next-line react-hooks/purity -- server component, avaliado a cada request
   const photosUnlocked = Date.now() >= new Date(PHOTOS_UNLOCK_DATE).getTime();
 
-  const [gifts, guestPhotos] = await Promise.all([
-    prisma.gift.findMany({ orderBy: [{ status: "asc" }, { createdAt: "desc" }] }),
+  const [giftsSnap, guestPhotos] = await Promise.all([
+    db.collection("gifts").orderBy("status", "asc").orderBy("createdAt", "desc").get(),
     photosUnlocked
       ? prisma.guestPhoto.findMany({ where: { approved: true }, orderBy: { createdAt: "desc" } })
       : Promise.resolve([]),
   ]);
+  const gifts = giftsSnap.docs.map((d) => docToObject<Gift>(d));
 
   return (
     <div>
@@ -81,13 +85,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <PresentesSection
-        gifts={gifts.map((g) => ({
-          ...g,
-          createdAt: g.createdAt.toISOString(),
-          updatedAt: g.updatedAt.toISOString(),
-        }))}
-      />
+      <PresentesSection gifts={gifts} />
 
       <FotosSection
         unlocked={photosUnlocked}

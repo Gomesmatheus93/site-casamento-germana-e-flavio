@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import { requireAdmin } from "@/lib/require-admin";
+import type { Gift } from "@/types/gift";
 
 const giftSchema = z.object({
   nome: z.string().min(2).max(120),
@@ -14,9 +17,12 @@ const giftSchema = z.object({
 });
 
 export async function GET() {
-  const gifts = await prisma.gift.findMany({
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-  });
+  const snap = await db
+    .collection("gifts")
+    .orderBy("status", "asc")
+    .orderBy("createdAt", "desc")
+    .get();
+  const gifts = snap.docs.map((d) => docToObject<Gift>(d));
   return NextResponse.json(gifts);
 }
 
@@ -33,14 +39,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const gift = await prisma.gift.create({
-    data: {
-      ...parsed.data,
-      descricao: parsed.data.descricao || null,
-      fotoUrl: parsed.data.fotoUrl || null,
-      linkExterno: parsed.data.linkExterno || null,
-    },
+  const ref = await db.collection("gifts").add({
+    ...parsed.data,
+    status: parsed.data.status ?? "DISPONIVEL",
+    descricao: parsed.data.descricao || null,
+    fotoUrl: parsed.data.fotoUrl || null,
+    linkExterno: parsed.data.linkExterno || null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
 
-  return NextResponse.json(gift, { status: 201 });
+  const snap = await ref.get();
+  return NextResponse.json(docToObject<Gift>(snap), { status: 201 });
 }
