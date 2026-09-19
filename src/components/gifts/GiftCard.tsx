@@ -18,7 +18,7 @@ export default function GiftCard({
           <img
             src={gift.fotoUrl}
             alt={gift.nome}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
