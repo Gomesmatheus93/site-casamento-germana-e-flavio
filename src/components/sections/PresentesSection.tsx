@@ -11,9 +11,10 @@ export default function PresentesSection({ gifts }: { gifts: Gift[] }) {
             Lista de Presentes
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-[var(--foreground)]/70">
-            Sua presença já é o maior presente. Mas, se desejar nos ajudar a começar essa
-            nova fase, preparamos esta lista com carinho. Você pode presentear via Pix,
-            cartão de crédito/débito ou pelo link de uma loja parceira.
+            Para quem quiser nos presentear, reunimos algumas sugestões que fazem
+            sentido para este novo capítulo da nossa família. Você poderá escolher
+            entre as opções disponíveis e realizar o pagamento via Pix ou cartão de
+            crédito.
           </p>
         </header>
 

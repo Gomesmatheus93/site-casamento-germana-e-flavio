@@ -79,9 +79,9 @@ export default async function Home() {
             Contamos com a sua presença
           </h2>
           <p className="mt-6 text-sm leading-relaxed text-[var(--foreground)]/70">
-            Mais do que presentes, o que mais desejamos é celebrar esse dia ao lado de
-            quem amamos. Sua presença é o maior presente — mas se quiser nos ajudar a
-            construir esse novo capítulo, preparamos uma lista com carinho.
+            Mais do que celebrar um casamento, queremos viver este dia cercados por
+            pessoas que fazem parte da nossa história. Ter você conosco tornará esse
+            momento ainda mais especial.
           </p>
         </div>
       </section>
