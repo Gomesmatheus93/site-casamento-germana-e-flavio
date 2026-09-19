@@ -5,19 +5,20 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_MP_PUBLIC_KEY: ${NEXT_PUBLIC_MP_PUBLIC_KEY}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
     image: casamento-flavio-germana:latest
     restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
       - .env
-    environment:
-      # Sobrescreve o DATABASE_URL do .env (usado pelo `npm run dev` local)
-      # para gravar dentro do volume persistente do container.
-      DATABASE_URL: file:/app/data/dev.db
     volumes:
-      # persiste o banco SQLite e as imagens enviadas (presentes e fotos)
-      # entre deploys/restarts, tudo num único volume
+      # persiste as imagens enviadas (presentes e fotos) entre deploys/restarts.
+      # Os dados estruturados ficam no Firestore, sem volume local.
       - app-data:/app/data
 
 volumes:

@@ -7,33 +7,39 @@ informações de local e logística para Mossoró - RN.
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript + Tailwind CSS 4
-- Prisma + SQLite (`prisma/dev.db`)
+- Firebase Firestore (banco de dados)
+- Firebase Authentication (login da área admin, via cookie de sessão)
 - Mercado Pago (`mercadopago` SDK server-side + `@mercadopago/sdk-react` no front-end,
   usando o **Payment Brick** para exibir Pix e cartão no mesmo pop-up)
-- Sessão admin via cookie httpOnly assinado com JWT (`jose`)
 
 ## Como rodar localmente
 
 ```bash
-npm install
-npx prisma db push   # cria/atualiza o banco SQLite local
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Acesse http://localhost:3000.
 
+Antes disso, é preciso ter um projeto Firebase com Firestore e Authentication
+(provedor Email/Senha) ativados, e as credenciais configuradas no `.env` — veja a
+seção de configuração abaixo.
+
 ## Configuração (arquivo `.env`)
 
-Um `.env` já foi criado com valores de exemplo. Ajuste antes de usar em produção:
+Copie `.env.example` para `.env` e preencha:
 
 | Variável | Descrição |
 | --- | --- |
-| `DATABASE_URL` | Caminho do banco SQLite (`file:./dev.db`) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Credenciais de acesso a `/admin` |
-| `SESSION_SECRET` | Chave aleatória usada para assinar o cookie de sessão (já gerada) |
+| `FIREBASE_PROJECT_ID` / `FIREBASE_CLIENT_EMAIL` / `FIREBASE_PRIVATE_KEY` | Credenciais do Admin SDK, obtidas em Project settings → Service accounts → Generate new private key |
+| `NEXT_PUBLIC_FIREBASE_*` | Config do web app (Project settings → General → Your apps → Web), usada só na página `/admin/login` pelo SDK client |
 | `MP_ACCESS_TOKEN` | **Access Token** do Mercado Pago (privado, usado no servidor) |
 | `NEXT_PUBLIC_MP_PUBLIC_KEY` | **Public Key** do Mercado Pago (usada no navegador) |
 | `NEXT_PUBLIC_SITE_URL` | URL pública do site (usada para o webhook do Mercado Pago) |
+
+O usuário admin é criado manualmente no Firebase Console (Authentication → Users →
+Add user) ou via Admin SDK — não existe mais cadastro de admin por variável de
+ambiente.
 
 ### Obtendo as credenciais do Mercado Pago
 
@@ -53,7 +59,7 @@ do servidor (`src/app/api/payments/*`).
 
 ## Área administrativa
 
-Acesse `/admin/login` com o email/senha definidos em `ADMIN_EMAIL`/`ADMIN_PASSWORD`.
+Acesse `/admin/login` com o email/senha do usuário criado no Firebase Authentication.
 
 Na área admin é possível:
 
@@ -75,12 +81,11 @@ As imagens (fotos de presentes e fotos dos convidados) são salvas localmente em
 `public/uploads/`. Isso funciona bem rodando em um servidor Node persistente (VPS,
 Railway, Render etc.). **Se for hospedar em uma plataforma serverless (ex.: Vercel)**, o
 sistema de arquivos não é persistente entre deploys/execuções — nesse caso, troque
-`src/lib/upload.ts` por um provedor de armazenamento externo (S3, Cloudinary,
-Vercel Blob etc.).
+`src/lib/upload.ts` por um provedor de armazenamento externo (Firebase Storage — exige
+o plano pago Blaze do projeto —, S3, Cloudinary, Vercel Blob etc.).
 
-O mesmo vale para o banco SQLite (`prisma/dev.db`): ótimo para começar e para hospedagem
-em servidor próprio; para serverless, troque o `datasource` do `prisma/schema.prisma`
-para Postgres/MySQL (ex.: Neon, Supabase, PlanetScale) e ajuste `DATABASE_URL`.
+Os dados (presentes, pedidos, fotos, confirmações de presença) ficam no Firestore, que
+já funciona em qualquer tipo de hospedagem, incluindo serverless.
 
 ## Conteúdo de local/logística e hospedagem
 

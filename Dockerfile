@@ -10,7 +10,7 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# ---- builder: gera o Prisma Client e o build de produção ----
+# ---- builder: gera o build de produção ----
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -20,10 +20,19 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # então precisam existir aqui (via --build-arg), não só em runtime.
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_MP_PUBLIC_KEY
+ARG NEXT_PUBLIC_FIREBASE_API_KEY
+ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
+ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+ARG NEXT_PUBLIC_FIREBASE_APP_ID
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_MP_PUBLIC_KEY=$NEXT_PUBLIC_MP_PUBLIC_KEY
+ENV NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY
+ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID
+ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 
-RUN npx prisma generate
 RUN npm run build
 
 # ---- runner: imagem final, enxuta, rodando como usuário não-root ----
@@ -32,10 +41,9 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-# Diretório único para dados persistentes (banco SQLite + uploads), pensado
-# para plataformas com um volume só por serviço (ex.: Railway). Monte o
-# volume em /app/data.
-ENV DATABASE_URL=file:/app/data/dev.db
+# Diretório para as imagens enviadas (presentes + fotos), pensado para
+# plataformas com um volume só por serviço (ex.: Railway). Monte o volume
+# em /app/data. Os dados estruturados ficam no Firestore, sem volume local.
 ENV UPLOADS_DIR=/app/data/uploads
 
 RUN groupadd --system --gid 1001 nodejs \
@@ -46,17 +54,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Prisma CLI (com todas as suas dependências) + schema, necessários no
-# entrypoint para sincronizar o banco SQLite. A CLI do Prisma tem uma árvore
-# de dependências própria (engines, wasm, etc.) que não é seguro copiar
-# seletivamente, então trazemos o node_modules completo do builder.
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
-
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh \
     && mkdir -p ./data \
-    && chown -R nextjs:nodejs ./data ./prisma
+    && chown -R nextjs:nodejs ./data
 
 USER nextjs
 
