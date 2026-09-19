@@ -15,12 +15,13 @@ const LINKS: NavLink[] = [
   { kind: "route", href: "/convite", label: "Convite" },
   { kind: "anchor", id: "presentes", href: "/#presentes", label: "Presentes" },
   { kind: "anchor", id: "fotos", href: "/#fotos", label: "Fotos" },
+  { kind: "anchor", id: "padrinhos", href: "/#padrinhos", label: "Padrinhos" },
   { kind: "anchor", id: "hospedagem", href: "/#hospedagem", label: "Hospedagem" },
   { kind: "anchor", id: "local", href: "/#local", label: "Local" },
   { kind: "route", href: "/confirmar-presenca", label: "Confirmar presença" },
 ];
 
-const SECTION_IDS = ["presentes", "fotos", "hospedagem", "local"];
+const SECTION_IDS = ["presentes", "fotos", "padrinhos", "hospedagem", "local"];
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
