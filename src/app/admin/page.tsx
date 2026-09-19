@@ -1,21 +1,30 @@
 import Link from "next/link";
 import { Gift, ReceiptText, Images, TrendingUp } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { AggregateField } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
 import AdminShell from "@/components/admin/AdminShell";
 import { formatBRL } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const [totalGifts, disponiveis, comprados, aprovados, photosCount] = await Promise.all([
-    prisma.gift.count(),
-    prisma.gift.count({ where: { status: "DISPONIVEL" } }),
-    prisma.gift.count({ where: { status: "COMPRADO" } }),
-    prisma.payment.findMany({ where: { status: "APROVADO" } }),
-    prisma.guestPhoto.count(),
+  const [totalGiftsSnap, disponiveisSnap, compradosSnap, aprovadosSnap, photosCountSnap] = await Promise.all([
+    db.collection("gifts").count().get(),
+    db.collection("gifts").where("status", "==", "DISPONIVEL").count().get(),
+    db.collection("gifts").where("status", "==", "COMPRADO").count().get(),
+    db
+      .collection("payments")
+      .where("status", "==", "APROVADO")
+      .aggregate({ total: AggregateField.sum("amount") })
+      .get(),
+    db.collection("guestPhotos").count().get(),
   ]);
 
-  const totalArrecadado = aprovados.reduce((sum, p) => sum + p.amount, 0);
+  const totalGifts = totalGiftsSnap.data().count;
+  const disponiveis = disponiveisSnap.data().count;
+  const comprados = compradosSnap.data().count;
+  const photosCount = photosCountSnap.data().count;
+  const totalArrecadado = aprovadosSnap.data().total ?? 0;
 
   const cards = [
     { label: "Presentes cadastrados", value: totalGifts, icon: Gift },
