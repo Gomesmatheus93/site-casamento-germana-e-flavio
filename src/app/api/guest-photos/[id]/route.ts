@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
 import { requireAdmin } from "@/lib/require-admin";
 
 export async function DELETE(
@@ -10,10 +10,11 @@ export async function DELETE(
   if (unauthorized) return unauthorized;
 
   const { id } = await params;
-  try {
-    await prisma.guestPhoto.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch {
+  const ref = db.collection("guestPhotos").doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) {
     return NextResponse.json({ error: "Foto não encontrada." }, { status: 404 });
   }
+  await ref.delete();
+  return NextResponse.json({ ok: true });
 }

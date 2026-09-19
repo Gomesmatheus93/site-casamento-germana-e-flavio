@@ -1,11 +1,14 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
 import AdminPhotoGrid from "@/components/admin/AdminPhotoGrid";
+import type { GuestPhoto } from "@/types/guest-photo";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminFotosPage() {
-  const photos = await prisma.guestPhoto.findMany({ orderBy: { createdAt: "desc" } });
+  const snap = await db.collection("guestPhotos").orderBy("createdAt", "desc").get();
+  const photos = snap.docs.map((d) => docToObject<GuestPhoto>(d));
 
   return (
     <AdminShell>
@@ -17,9 +20,7 @@ export default async function AdminFotosPage() {
       </p>
 
       <div className="mt-6">
-        <AdminPhotoGrid
-          initialPhotos={photos.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() }))}
-        />
+        <AdminPhotoGrid initialPhotos={photos} />
       </div>
     </AdminShell>
   );
