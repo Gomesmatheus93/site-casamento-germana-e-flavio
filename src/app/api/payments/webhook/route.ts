@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
 import { getMpPaymentClient } from "@/lib/mercadopago";
-import type { PaymentStatus } from "@prisma/client";
+import type { PaymentStatus } from "@/types/payment";
 
 function mapStatus(mpStatus: string | undefined): PaymentStatus {
   switch (mpStatus) {
@@ -37,34 +38,32 @@ export async function POST(req: NextRequest) {
     const externalRef = result.external_reference;
     if (!externalRef) return NextResponse.json({ ok: true });
 
-    const paymentRecord = await prisma.payment.findUnique({ where: { id: externalRef } });
-    if (!paymentRecord) return NextResponse.json({ ok: true });
-
     const status = mapStatus(result.status);
 
-    await prisma.payment.update({
-      where: { id: paymentRecord.id },
-      data: {
+    await db.runTransaction(async (tx) => {
+      const paymentRef = db.collection("payments").doc(externalRef);
+      const paymentSnap = await tx.get(paymentRef);
+      if (!paymentSnap.exists) return;
+      const payment = paymentSnap.data()!;
+
+      const giftRef = db.collection("gifts").doc(payment.giftId as string);
+      const giftSnap = await tx.get(giftRef);
+
+      tx.update(paymentRef, {
         status,
         mpPaymentId: String(result.id),
         mpStatusDetail: result.status_detail || null,
-      },
-    });
-
-    if (status === "APROVADO") {
-      await prisma.gift.update({
-        where: { id: paymentRecord.giftId },
-        data: { status: "COMPRADO" },
+        updatedAt: FieldValue.serverTimestamp(),
       });
-    } else if (status === "RECUSADO" || status === "CANCELADO") {
-      const gift = await prisma.gift.findUnique({ where: { id: paymentRecord.giftId } });
-      if (gift?.status === "RESERVADO") {
-        await prisma.gift.update({
-          where: { id: paymentRecord.giftId },
-          data: { status: "DISPONIVEL" },
-        });
+
+      if (status === "APROVADO") {
+        tx.update(giftRef, { status: "COMPRADO", updatedAt: FieldValue.serverTimestamp() });
+      } else if (status === "RECUSADO" || status === "CANCELADO") {
+        if (giftSnap.exists && giftSnap.data()?.status === "RESERVADO") {
+          tx.update(giftRef, { status: "DISPONIVEL", updatedAt: FieldValue.serverTimestamp() });
+        }
       }
-    }
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

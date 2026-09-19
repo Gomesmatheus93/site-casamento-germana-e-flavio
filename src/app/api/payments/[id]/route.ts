@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import { getMpPaymentClient } from "@/lib/mercadopago";
-import type { PaymentStatus } from "@prisma/client";
+import type { Payment, PaymentStatus } from "@/types/payment";
 
 function mapStatus(mpStatus: string | undefined): PaymentStatus {
   switch (mpStatus) {
@@ -21,10 +23,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  let payment = await prisma.payment.findUnique({ where: { id } });
-  if (!payment) {
+  const paymentRef = db.collection("payments").doc(id);
+  let snap = await paymentRef.get();
+  if (!snap.exists) {
     return NextResponse.json({ error: "Pagamento não encontrado." }, { status: 404 });
   }
+  let payment = docToObject<Payment>(snap);
 
   // Em ambientes sem webhook público (ex.: desenvolvimento local), consulta o
   // Mercado Pago diretamente enquanto o pagamento seguir pendente, para que
@@ -36,25 +40,27 @@ export async function GET(
       const status = mapStatus(result.status);
 
       if (status !== payment.status) {
-        payment = await prisma.payment.update({
-          where: { id: payment.id },
-          data: { status, mpStatusDetail: result.status_detail || null },
+        await db.runTransaction(async (tx) => {
+          const giftRef = db.collection("gifts").doc(payment.giftId);
+          const giftSnap = await tx.get(giftRef);
+
+          tx.update(paymentRef, {
+            status,
+            mpStatusDetail: result.status_detail || null,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+
+          if (status === "APROVADO") {
+            tx.update(giftRef, { status: "COMPRADO", updatedAt: FieldValue.serverTimestamp() });
+          } else if (status === "RECUSADO" || status === "CANCELADO") {
+            if (giftSnap.exists && giftSnap.data()?.status === "RESERVADO") {
+              tx.update(giftRef, { status: "DISPONIVEL", updatedAt: FieldValue.serverTimestamp() });
+            }
+          }
         });
 
-        if (status === "APROVADO") {
-          await prisma.gift.update({
-            where: { id: payment.giftId },
-            data: { status: "COMPRADO" },
-          });
-        } else if (status === "RECUSADO" || status === "CANCELADO") {
-          const gift = await prisma.gift.findUnique({ where: { id: payment.giftId } });
-          if (gift?.status === "RESERVADO") {
-            await prisma.gift.update({
-              where: { id: payment.giftId },
-              data: { status: "DISPONIVEL" },
-            });
-          }
-        }
+        snap = await paymentRef.get();
+        payment = docToObject<Payment>(snap);
       }
     } catch {
       // Se a consulta falhar, seguimos com o status já salvo no banco.

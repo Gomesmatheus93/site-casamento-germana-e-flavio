@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import { getMpPaymentClient } from "@/lib/mercadopago";
-import type { PaymentMethod, PaymentStatus } from "@prisma/client";
+import type { Gift } from "@/types/gift";
+import type { Payment, PaymentMethod, PaymentStatus } from "@/types/payment";
 
 const bodySchema = z.object({
   giftId: z.string().min(1),
@@ -66,23 +69,27 @@ export async function POST(req: NextRequest) {
   }
   const { giftId, guestName, guestMessage, formData } = parsed.data;
 
-  const gift = await prisma.gift.findUnique({ where: { id: giftId } });
-  if (!gift) {
+  const giftSnap = await db.collection("gifts").doc(giftId).get();
+  if (!giftSnap.exists) {
     return NextResponse.json({ error: "Presente não encontrado." }, { status: 404 });
   }
+  const gift = docToObject<Gift>(giftSnap);
 
   const isPix = formData.payment_method_id === "pix";
   const method: PaymentMethod = isPix ? "PIX" : "CARTAO";
 
-  const paymentRecord = await prisma.payment.create({
-    data: {
-      giftId: gift.id,
-      guestName,
-      guestMessage: guestMessage || null,
-      method,
-      status: "PENDENTE",
-      amount: gift.valor,
-    },
+  const paymentRef = await db.collection("payments").add({
+    giftId: gift.id,
+    giftNome: gift.nome,
+    guestName,
+    guestMessage: guestMessage || null,
+    method,
+    status: "PENDENTE" as PaymentStatus,
+    amount: gift.valor,
+    mpPaymentId: null,
+    mpStatusDetail: null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   });
 
   try {
@@ -103,28 +110,29 @@ export async function POST(req: NextRequest) {
           last_name: formData.payer?.last_name,
           identification: formData.payer?.identification,
         },
-        external_reference: paymentRecord.id,
+        external_reference: paymentRef.id,
         notification_url: notificationUrl,
-        metadata: { giftId: gift.id, paymentRecordId: paymentRecord.id },
+        metadata: { giftId: gift.id, paymentRecordId: paymentRef.id },
       },
     });
 
     const status = mapStatus(result.status);
 
-    const updated = await prisma.payment.update({
-      where: { id: paymentRecord.id },
-      data: {
-        status,
-        mpPaymentId: result.id ? String(result.id) : null,
-        mpStatusDetail: result.status_detail || null,
-      },
+    await paymentRef.update({
+      status,
+      mpPaymentId: result.id ? String(result.id) : null,
+      mpStatusDetail: result.status_detail || null,
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     if (status === "APROVADO") {
-      await prisma.gift.update({ where: { id: gift.id }, data: { status: "COMPRADO" } });
+      await db.collection("gifts").doc(gift.id).update({ status: "COMPRADO", updatedAt: FieldValue.serverTimestamp() });
     } else if (status === "PENDENTE") {
-      await prisma.gift.update({ where: { id: gift.id }, data: { status: "RESERVADO" } });
+      await db.collection("gifts").doc(gift.id).update({ status: "RESERVADO", updatedAt: FieldValue.serverTimestamp() });
     }
+
+    const updatedSnap = await paymentRef.get();
+    const updated = docToObject<Payment>(updatedSnap);
 
     const poi = result.point_of_interaction?.transaction_data;
 
@@ -142,9 +150,10 @@ export async function POST(req: NextRequest) {
         : null,
     });
   } catch (err) {
-    await prisma.payment.update({
-      where: { id: paymentRecord.id },
-      data: { status: "RECUSADO", mpStatusDetail: err instanceof Error ? err.message : "erro" },
+    await paymentRef.update({
+      status: "RECUSADO" as PaymentStatus,
+      mpStatusDetail: err instanceof Error ? err.message : "erro",
+      updatedAt: FieldValue.serverTimestamp(),
     });
     const message = err instanceof Error ? err.message : "Erro ao processar pagamento.";
     return NextResponse.json({ error: message }, { status: 400 });

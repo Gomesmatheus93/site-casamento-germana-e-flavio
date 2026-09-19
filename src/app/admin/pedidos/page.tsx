@@ -1,7 +1,9 @@
 import { Download } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
 import { formatBRL } from "@/lib/format";
+import type { Payment } from "@/types/payment";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +22,8 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 export default async function AdminPedidosPage() {
-  const payments = await prisma.payment.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { gift: { select: { nome: true } } },
-  });
+  const snap = await db.collection("payments").orderBy("createdAt", "desc").get();
+  const payments = snap.docs.map((d) => docToObject<Payment>(d));
 
   return (
     <AdminShell>
@@ -52,7 +52,7 @@ export default async function AdminPedidosPage() {
           <tbody>
             {payments.map((p) => (
               <tr key={p.id} className="border-b border-[var(--color-border)] last:border-0 align-top">
-                <td className="px-4 py-3 font-medium">{p.gift.nome}</td>
+                <td className="px-4 py-3 font-medium">{p.giftNome}</td>
                 <td className="px-4 py-3">
                   {p.guestName}
                   {p.guestMessage && (
@@ -71,7 +71,7 @@ export default async function AdminPedidosPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-[var(--color-muted)]">
-                  {p.createdAt.toLocaleDateString("pt-BR")}
+                  {new Date(p.createdAt).toLocaleDateString("pt-BR")}
                 </td>
               </tr>
             ))}

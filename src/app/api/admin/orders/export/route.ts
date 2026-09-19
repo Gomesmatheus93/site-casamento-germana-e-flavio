@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import { requireAdmin } from "@/lib/require-admin";
+import type { Payment } from "@/types/payment";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDENTE: "Pendente",
@@ -26,20 +28,18 @@ export async function GET() {
   const unauthorized = await requireAdmin();
   if (unauthorized) return unauthorized;
 
-  const payments = await prisma.payment.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { gift: { select: { nome: true } } },
-  });
+  const snap = await db.collection("payments").orderBy("createdAt", "desc").get();
+  const payments = snap.docs.map((d) => docToObject<Payment>(d));
 
   const header = ["Convidado", "Mensagem", "Presente", "Método", "Valor", "Status", "Data"];
   const rows = payments.map((p) => [
     p.guestName,
     p.guestMessage ?? "",
-    p.gift.nome,
+    p.giftNome,
     METHOD_LABEL[p.method] ?? p.method,
     p.amount.toFixed(2).replace(".", ","),
     STATUS_LABEL[p.status] ?? p.status,
-    p.createdAt.toLocaleDateString("pt-BR"),
+    new Date(p.createdAt).toLocaleDateString("pt-BR"),
   ]);
 
   const csv = [header, ...rows]
