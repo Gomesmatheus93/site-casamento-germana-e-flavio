@@ -1,5 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase-admin";
+import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
+import type { Rsvp } from "@/types/rsvp";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,8 @@ function formatPhone(digits: string) {
 }
 
 export default async function AdminConfirmacoesPage() {
-  const rsvps = await prisma.rsvp.findMany({ orderBy: { updatedAt: "desc" } });
+  const snap = await db.collection("rsvps").orderBy("updatedAt", "desc").get();
+  const rsvps = snap.docs.map((d) => docToObject<Rsvp>(d));
 
   const confirmed = rsvps.filter((r) => r.attending);
   const totalPeople = confirmed.reduce((sum, r) => sum + r.guestCount, 0);
@@ -77,7 +80,7 @@ export default async function AdminConfirmacoesPage() {
                     {r.companionNames || "—"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-[var(--color-muted)]">
-                    {r.updatedAt.toLocaleString("pt-BR", { timeZone: "America/Fortaleza", dateStyle: "short", timeStyle: "short" })}
+                    {new Date(r.updatedAt).toLocaleString("pt-BR", { timeZone: "America/Fortaleza", dateStyle: "short", timeStyle: "short" })}
                   </td>
                 </tr>
               ))}

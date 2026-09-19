@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { FieldValue } from "firebase-admin/firestore";
+import { db } from "@/lib/firebase-admin";
 
 const rsvpSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -37,10 +38,19 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    await prisma.rsvp.upsert({
-      where: { phone },
-      create: { phone, ...data },
-      update: data,
+    const ref = db.collection("rsvps").doc(phone);
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      tx.set(
+        ref,
+        {
+          phone,
+          ...data,
+          createdAt: snap.exists ? snap.data()!.createdAt : FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
     });
     return NextResponse.json({ message: "Resposta registrada com sucesso." });
   } catch {
