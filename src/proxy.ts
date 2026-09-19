@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
+import { adminAuth } from "@/lib/firebase-admin";
 
 const COOKIE_NAME = "admin_session";
 
@@ -11,12 +11,11 @@ export async function proxy(req: NextRequest) {
   }
 
   const token = req.cookies.get(COOKIE_NAME)?.value;
-  const secret = process.env.SESSION_SECRET;
 
   let valid = false;
-  if (token && secret) {
+  if (token) {
     try {
-      await jwtVerify(token, new TextEncoder().encode(secret));
+      await adminAuth.verifySessionCookie(token, true);
       valid = true;
     } catch {
       valid = false;

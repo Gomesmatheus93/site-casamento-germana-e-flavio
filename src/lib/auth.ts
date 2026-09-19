@@ -1,31 +1,19 @@
-import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { adminAuth } from "@/lib/firebase-admin";
 
 const COOKIE_NAME = "admin_session";
-const ALG = "HS256";
+const EXPIRES_IN_MS = 60 * 60 * 24 * 14 * 1000; // 14 dias (maximo permitido pelo Firebase)
 
-function getSecretKey() {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET não configurado no .env");
-  }
-  return new TextEncoder().encode(secret);
-}
-
-export async function createAdminSession(email: string) {
-  const token = await new SignJWT({ email, role: "admin" })
-    .setProtectedHeader({ alg: ALG })
-    .setIssuedAt()
-    .setExpirationTime("30d")
-    .sign(getSecretKey());
+export async function createAdminSession(idToken: string) {
+  const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn: EXPIRES_IN_MS });
 
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
+  cookieStore.set(COOKIE_NAME, sessionCookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: EXPIRES_IN_MS / 1000,
   });
 }
 
@@ -39,18 +27,7 @@ export async function getAdminSession() {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecretKey());
-    return payload as { email: string; role: string };
-  } catch {
-    return null;
-  }
-}
-
-export async function verifySessionToken(token: string | undefined) {
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, getSecretKey());
-    return payload as { email: string; role: string };
+    return await adminAuth.verifySessionCookie(token, true);
   } catch {
     return null;
   }

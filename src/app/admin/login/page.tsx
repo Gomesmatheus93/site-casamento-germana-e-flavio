@@ -3,6 +3,8 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { clientAuth } from "@/lib/firebase-client";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,10 +19,13 @@ function LoginForm() {
     setLoading(true);
     setError("");
     try {
+      const credential = await signInWithEmailAndPassword(clientAuth, email, password);
+      const idToken = await credential.user.getIdToken();
+
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ idToken }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -29,8 +34,13 @@ function LoginForm() {
       }
       router.push(searchParams.get("next") || "/admin");
       router.refresh();
-    } catch {
-      setError("Erro de conexão.");
+    } catch (err) {
+      const code = (err as { code?: string })?.code;
+      if (code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") {
+        setError("Email ou senha inválidos.");
+      } else {
+        setError("Erro de conexão.");
+      }
     } finally {
       setLoading(false);
     }
