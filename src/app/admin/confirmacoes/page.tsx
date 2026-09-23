@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import { db } from "@/lib/firebase-admin";
 import { docToObject } from "@/lib/firestore-utils";
 import AdminShell from "@/components/admin/AdminShell";
@@ -27,9 +28,21 @@ export default async function AdminConfirmacoesPage() {
 
   return (
     <AdminShell>
-      <h1 className="font-serif-display text-2xl text-[var(--color-primary-dark)]">
-        Confirmações de presença
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-serif-display text-2xl text-[var(--color-primary-dark)]">
+          Confirmações de presença
+        </h1>
+        <div className="flex gap-2">
+          <a href="/api/admin/rsvps/export?format=csv" className="btn-outline">
+            <Download className="h-3.5 w-3.5" />
+            Exportar CSV
+          </a>
+          <a href="/api/admin/rsvps/export?format=xlsx" className="btn-solid">
+            <Download className="h-3.5 w-3.5" />
+            Exportar Excel
+          </a>
+        </div>
+      </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         {cards.map((c) => (
