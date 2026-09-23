@@ -125,11 +125,8 @@ export async function POST(req: NextRequest) {
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    if (status === "APROVADO") {
-      await db.collection("gifts").doc(gift.id).update({ status: "COMPRADO", updatedAt: FieldValue.serverTimestamp() });
-    } else if (status === "PENDENTE") {
-      await db.collection("gifts").doc(gift.id).update({ status: "RESERVADO", updatedAt: FieldValue.serverTimestamp() });
-    }
+    // O presente permanece disponível mesmo após a compra, para que outras
+    // pessoas também possam presenteá-lo.
 
     const updatedSnap = await paymentRef.get();
     const updated = docToObject<Payment>(updatedSnap);

@@ -40,29 +40,13 @@ export async function POST(req: NextRequest) {
 
     const status = mapStatus(result.status);
 
-    await db.runTransaction(async (tx) => {
-      const paymentRef = db.collection("payments").doc(externalRef);
-      const paymentSnap = await tx.get(paymentRef);
-      if (!paymentSnap.exists) return;
-      const payment = paymentSnap.data()!;
-
-      const giftRef = db.collection("gifts").doc(payment.giftId as string);
-      const giftSnap = await tx.get(giftRef);
-
-      tx.update(paymentRef, {
-        status,
-        mpPaymentId: String(result.id),
-        mpStatusDetail: result.status_detail || null,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-
-      if (status === "APROVADO") {
-        tx.update(giftRef, { status: "COMPRADO", updatedAt: FieldValue.serverTimestamp() });
-      } else if (status === "RECUSADO" || status === "CANCELADO") {
-        if (giftSnap.exists && giftSnap.data()?.status === "RESERVADO") {
-          tx.update(giftRef, { status: "DISPONIVEL", updatedAt: FieldValue.serverTimestamp() });
-        }
-      }
+    // O presente permanece disponível mesmo após a compra, para que outras
+    // pessoas também possam presenteá-lo.
+    await db.collection("payments").doc(externalRef).update({
+      status,
+      mpPaymentId: String(result.id),
+      mpStatusDetail: result.status_detail || null,
+      updatedAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json({ ok: true });
