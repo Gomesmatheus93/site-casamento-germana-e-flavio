@@ -1,4 +1,5 @@
-import { MercadoPagoConfig, Payment } from "mercadopago";
+import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
+import type { PaymentStatus } from "@/types/payment";
 
 let client: MercadoPagoConfig | null = null;
 
@@ -15,4 +16,21 @@ export function getMpClient() {
 
 export function getMpPaymentClient() {
   return new Payment(getMpClient());
+}
+
+export function getMpPreferenceClient() {
+  return new Preference(getMpClient());
+}
+
+export function mapMpStatus(mpStatus: string | undefined): PaymentStatus {
+  switch (mpStatus) {
+    case "approved":
+      return "APROVADO";
+    case "rejected":
+      return "RECUSADO";
+    case "cancelled":
+      return "CANCELADO";
+    default:
+      return "PENDENTE";
+  }
 }

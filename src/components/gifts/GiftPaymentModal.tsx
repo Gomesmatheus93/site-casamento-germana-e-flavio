@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { X, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
+import { X, ExternalLink, Copy, Check, Loader2, CreditCard } from "lucide-react";
 import { initMercadoPago, Payment, StatusScreen } from "@mercadopago/sdk-react";
 import type { Gift } from "@/types/gift";
 import { formatBRL } from "@/lib/format";
@@ -153,11 +153,10 @@ export default function GiftPaymentModal({
 
   const customization = useMemo(
     () => ({
+      // Cartão é pago no Checkout Pro (página do Mercado Pago), que aprova
+      // mais cartões; aqui no formulário embutido fica só o Pix.
       paymentMethods: {
-        creditCard: "all" as const,
-        debitCard: "all" as const,
         bankTransfer: "all" as const,
-        maxInstallments: 3,
       },
     }),
     []
@@ -214,6 +213,33 @@ export default function GiftPaymentModal({
       }
     } catch {
       setErrorMsg("Erro de conexão ao processar o pagamento.");
+      setStep("error");
+    }
+  }
+
+  async function handleCardCheckout() {
+    setStep("processing");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          giftId: gift.id,
+          guestName,
+          guestMessage: guestMessage || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.checkoutUrl) {
+        console.error("Falha ao iniciar pagamento com cartão", data);
+        setErrorMsg(data.error || "Não foi possível iniciar o pagamento com cartão.");
+        setStep("error");
+        return;
+      }
+      window.location.href = data.checkoutUrl;
+    } catch {
+      setErrorMsg("Erro de conexão ao iniciar o pagamento.");
       setStep("error");
     }
   }
@@ -308,8 +334,24 @@ export default function GiftPaymentModal({
           {step === "brick" && (
             <div>
               <p className="mb-5 text-sm text-[var(--color-muted)]">
-                Escolha Pix ou cartão para presentear <strong>{guestName}</strong>.
+                Escolha como presentear, <strong>{guestName}</strong>.
               </p>
+              <button
+                type="button"
+                onClick={handleCardCheckout}
+                className="btn-solid flex w-full items-center justify-center gap-2"
+              >
+                <CreditCard className="h-4 w-4" />
+                Pagar com cartão de crédito
+              </button>
+              <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
+                Você será levado ao ambiente seguro do Mercado Pago.
+              </p>
+              <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-muted)]">
+                <span className="h-px flex-1 bg-[var(--color-border)]" />
+                ou pague com Pix
+                <span className="h-px flex-1 bg-[var(--color-border)]" />
+              </div>
               <Payment
                 key={brickKey}
                 initialization={initialization}
