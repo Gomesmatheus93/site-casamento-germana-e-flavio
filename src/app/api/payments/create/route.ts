@@ -11,7 +11,8 @@ const bodySchema = z.object({
   giftId: z.string().min(1),
   guestName: z.string().min(2).max(120),
   guestMessage: z.string().max(500).optional().nullable(),
-  deviceId: z.string().max(200).optional().nullable(),
+  // Opcional: se vier em formato inesperado, é ignorado em vez de bloquear o pagamento.
+  deviceId: z.string().max(2000).nullable().optional().catch(null),
   formData: z.object({
     payment_method_id: z.string(),
     token: z.string().optional(),

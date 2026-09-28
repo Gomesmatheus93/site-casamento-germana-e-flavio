@@ -142,6 +142,7 @@ export default function GiftPaymentModal({
       const data = await res.json();
 
       if (!res.ok) {
+        console.error("Falha ao criar pagamento", data);
         setErrorMsg(data.error || "Não foi possível processar o pagamento.");
         setStep("error");
         return;
