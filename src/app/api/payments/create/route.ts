@@ -137,6 +137,9 @@ export async function POST(req: NextRequest) {
           ],
           payer: { first_name: firstName, last_name: lastName },
         },
+        // 3DS: em compras que o antifraude considera arriscadas, o Mercado Pago
+        // pede ao comprador que confirme no app/SMS do banco em vez de recusar.
+        three_d_secure_mode: isPix ? undefined : "optional",
         external_reference: paymentRef.id,
         notification_url: notificationUrl,
         metadata: { giftId: gift.id, paymentRecordId: paymentRef.id },
@@ -159,6 +162,11 @@ export async function POST(req: NextRequest) {
     const updated = docToObject<Payment>(updatedSnap);
 
     const poi = result.point_of_interaction?.transaction_data;
+    const threeDs = result.three_ds_info;
+    const needsChallenge =
+      result.status_detail === "pending_challenge" &&
+      !!threeDs?.external_resource_url &&
+      !!threeDs?.creq;
 
     return NextResponse.json({
       paymentId: updated.id,
@@ -170,6 +178,12 @@ export async function POST(req: NextRequest) {
             qrCodeBase64: poi.qr_code_base64,
             qrCode: poi.qr_code,
             ticketUrl: poi.ticket_url,
+          }
+        : null,
+      challenge: needsChallenge
+        ? {
+            externalResourceURL: threeDs!.external_resource_url!,
+            creq: threeDs!.creq!,
           }
         : null,
     });

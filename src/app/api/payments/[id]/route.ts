@@ -56,5 +56,9 @@ export async function GET(
     }
   }
 
-  return NextResponse.json({ status: payment.status, method: payment.method });
+  return NextResponse.json({
+    status: payment.status,
+    method: payment.method,
+    statusDetail: payment.mpStatusDetail,
+  });
 }

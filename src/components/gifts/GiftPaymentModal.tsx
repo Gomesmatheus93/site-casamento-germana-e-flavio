@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { X, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
-import { initMercadoPago, Payment } from "@mercadopago/sdk-react";
+import { initMercadoPago, Payment, StatusScreen } from "@mercadopago/sdk-react";
 import type { Gift } from "@/types/gift";
 import { formatBRL } from "@/lib/format";
 
@@ -44,17 +44,35 @@ function rejectionMessage(statusDetail: string | undefined) {
       return "Você já fez um pagamento com esse valor. Se precisar pagar de novo, use outro cartão ou Pix.";
     case "cc_rejected_high_risk":
       return "O pagamento foi recusado pelo sistema antifraude. Tente outro cartão ou pague com Pix.";
+    case "cc_rejected_3ds_challenge":
+    case "cc_rejected_3ds_mandatory":
+      return "A confirmação com o banco não foi concluída. Tente novamente ou pague com Pix.";
     default:
       return "Pagamento recusado. Tente novamente com outro cartão ou pague com Pix.";
   }
 }
 
-type Step = "form" | "brick" | "processing" | "pix" | "success" | "pending" | "error";
+type Step =
+  | "form"
+  | "brick"
+  | "processing"
+  | "pix"
+  | "challenge"
+  | "success"
+  | "pending"
+  | "error";
 
 type PixData = {
   qrCodeBase64?: string;
   qrCode?: string;
   ticketUrl?: string;
+};
+
+// Dados do desafio 3DS (confirmação no app/SMS do banco).
+type ChallengeData = {
+  mpPaymentId: string;
+  externalResourceURL: string;
+  creq: string;
 };
 
 export default function GiftPaymentModal({
@@ -72,6 +90,7 @@ export default function GiftPaymentModal({
   const [brickKey, setBrickKey] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [pixData, setPixData] = useState<PixData | null>(null);
+  const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -92,7 +111,7 @@ export default function GiftPaymentModal({
   }, []);
 
   useEffect(() => {
-    if (step !== "pix" || !paymentId) return;
+    if ((step !== "pix" && step !== "challenge") || !paymentId) return;
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/payments/${paymentId}`);
@@ -101,6 +120,12 @@ export default function GiftPaymentModal({
         if (data.status === "APROVADO") {
           setStep("success");
           onGiftUpdated({ ...gift, status: "COMPRADO" });
+        } else if (
+          step === "challenge" &&
+          (data.status === "RECUSADO" || data.status === "CANCELADO")
+        ) {
+          setErrorMsg(rejectionMessage(data.statusDetail));
+          setStep("error");
         }
       } catch {
         // ignora falhas de rede pontuais durante o polling
@@ -111,6 +136,20 @@ export default function GiftPaymentModal({
   }, [step, paymentId]);
 
   const initialization = useMemo(() => ({ amount: gift.valor }), [gift.valor]);
+
+  const challengeInitialization = useMemo(
+    () =>
+      challenge
+        ? {
+            paymentId: challenge.mpPaymentId,
+            additionalInfo: {
+              externalResourceURL: challenge.externalResourceURL,
+              creq: challenge.creq,
+            },
+          }
+        : null,
+    [challenge]
+  );
 
   const customization = useMemo(
     () => ({
@@ -157,6 +196,12 @@ export default function GiftPaymentModal({
         return;
       }
 
+      if (data.challenge && data.mpPaymentId) {
+        setChallenge({ mpPaymentId: data.mpPaymentId, ...data.challenge });
+        setStep("challenge");
+        return;
+      }
+
       if (data.status === "APROVADO") {
         setStep("success");
         onGiftUpdated({ ...gift, status: "COMPRADO" });
@@ -175,6 +220,7 @@ export default function GiftPaymentModal({
 
   function handleRetry() {
     setBrickKey((k) => k + 1);
+    setChallenge(null);
     setStep("brick");
     setErrorMsg("");
   }
@@ -313,6 +359,22 @@ export default function GiftPaymentModal({
               <p className="text-xs text-[var(--color-muted)]">
                 Assim que o pagamento for confirmado, esta janela atualiza automaticamente.
               </p>
+            </div>
+          )}
+
+          {step === "challenge" && challengeInitialization && (
+            <div>
+              <p className="mb-5 text-sm text-[var(--color-muted)]">
+                Seu banco pediu uma confirmação de segurança. Siga as instruções abaixo
+                para concluir o pagamento.
+              </p>
+              <StatusScreen
+                initialization={challengeInitialization}
+                onError={(err) => {
+                  console.error(err);
+                }}
+                locale="pt-BR"
+              />
             </div>
           )}
 
