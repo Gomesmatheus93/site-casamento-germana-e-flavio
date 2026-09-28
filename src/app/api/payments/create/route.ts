@@ -11,6 +11,7 @@ const bodySchema = z.object({
   giftId: z.string().min(1),
   guestName: z.string().min(2).max(120),
   guestMessage: z.string().max(500).optional().nullable(),
+  deviceId: z.string().max(200).optional().nullable(),
   formData: z.object({
     payment_method_id: z.string(),
     token: z.string().optional(),
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  const { giftId, guestName, guestMessage, formData } = parsed.data;
+  const { giftId, guestName, guestMessage, deviceId, formData } = parsed.data;
 
   const giftSnap = await db.collection("gifts").doc(giftId).get();
   if (!giftSnap.exists) {
@@ -96,7 +97,18 @@ export async function POST(req: NextRequest) {
     const mpPayment = getMpPaymentClient();
     const notificationUrl = publicNotificationUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
+    // Dados extras para o antifraude do Mercado Pago. Sem eles (e sem o
+    // device id), pagamentos com cartão são recusados como "high risk".
+    const [nameFirst, ...nameRest] = guestName.trim().split(/\s+/);
+    const firstName = formData.payer?.first_name || nameFirst;
+    const lastName = formData.payer?.last_name || nameRest.join(" ") || undefined;
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      req.headers.get("x-real-ip") ||
+      undefined;
+
     const result = await mpPayment.create({
+      requestOptions: deviceId ? { meliSessionId: deviceId } : undefined,
       body: {
         transaction_amount: gift.valor,
         description: `Presente de casamento: ${gift.nome}`,
@@ -106,9 +118,23 @@ export async function POST(req: NextRequest) {
         installments: formData.installments ?? 1,
         payer: {
           email: formData.payer?.email || "convidado@example.com",
-          first_name: formData.payer?.first_name,
-          last_name: formData.payer?.last_name,
+          first_name: firstName,
+          last_name: lastName,
           identification: formData.payer?.identification,
+        },
+        additional_info: {
+          ip_address: ipAddress,
+          items: [
+            {
+              id: gift.id,
+              title: gift.nome,
+              description: `Presente de casamento: ${gift.nome}`,
+              category_id: "others",
+              quantity: 1,
+              unit_price: gift.valor,
+            },
+          ],
+          payer: { first_name: firstName, last_name: lastName },
         },
         external_reference: paymentRef.id,
         notification_url: notificationUrl,
