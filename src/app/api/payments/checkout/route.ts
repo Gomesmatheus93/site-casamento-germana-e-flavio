@@ -3,14 +3,13 @@ import { z } from "zod";
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase-admin";
 import { docToObject } from "@/lib/firestore-utils";
-import { getMpPreferenceClient } from "@/lib/mercadopago";
+import { createInfinitePayLink } from "@/lib/infinitepay";
 import type { Gift } from "@/types/gift";
 import type { PaymentStatus } from "@/types/payment";
 
-// Pagamento com cartão via Checkout Pro: o convidado paga na página do
-// próprio Mercado Pago e volta para /pagamento/retorno. Lá o Mercado Pago
-// cuida de login, 3DS e antifraude, o que aprova mais cartões do que o
-// formulário embutido no site.
+// Pagamento com cartão via checkout do InfinitePay: o convidado paga na
+// página do InfinitePay e volta para /pagamento/retorno, onde o pagamento é
+// confirmado. (O Pix continua pelo Mercado Pago, no próprio modal.)
 
 const bodySchema = z.object({
   giftId: z.string().min(1),
@@ -66,39 +65,16 @@ export async function POST(req: NextRequest) {
     const origin = siteOrigin(req);
     const isHttps = origin.startsWith("https://");
     const returnUrl = `${origin}/pagamento/retorno`;
-    const [firstName, ...rest] = guestName.trim().split(/\s+/);
 
-    const preference = await getMpPreferenceClient().create({
-      body: {
-        items: [
-          {
-            id: gift.id,
-            title: gift.nome,
-            description: `Presente de casamento: ${gift.nome}`,
-            category_id: "others",
-            quantity: 1,
-            currency_id: "BRL",
-            unit_price: gift.valor,
-          },
-        ],
-        payer: { name: firstName, surname: rest.join(" ") || undefined },
-        payment_methods: {
-          // Boleto demora dias para compensar; o Pix já existe no próprio site.
-          excluded_payment_types: [{ id: "ticket" }],
-          installments: 3,
-        },
-        back_urls: { success: returnUrl, failure: returnUrl, pending: returnUrl },
-        // O Mercado Pago só aceita retorno automático para endereços HTTPS.
-        auto_return: isHttps ? "approved" : undefined,
-        notification_url: isHttps ? `${origin}/api/payments/webhook` : undefined,
-        external_reference: paymentRef.id,
-        statement_descriptor: "CASAMENTO",
-        metadata: { giftId: gift.id, paymentRecordId: paymentRef.id },
-      },
+    const checkoutUrl = await createInfinitePayLink({
+      orderNsu: paymentRef.id,
+      description: `Presente de casamento: ${gift.nome}`,
+      amount: gift.valor,
+      customerName: guestName,
+      redirectUrl: returnUrl,
+      // O InfinitePay precisa alcançar a URL, então só em endereço público HTTPS.
+      webhookUrl: isHttps ? `${origin}/api/payments/infinitepay/webhook` : undefined,
     });
-
-    const checkoutUrl = preference.init_point;
-    if (!checkoutUrl) throw new Error("O Mercado Pago não retornou o link de pagamento.");
 
     return NextResponse.json({ paymentId: paymentRef.id, checkoutUrl });
   } catch (err) {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "@/lib/firebase-admin";
 import { getMpPaymentClient, mapMpStatus } from "@/lib/mercadopago";
+import { syncInfinitePayPayment } from "@/lib/infinitepay";
 import type { PaymentStatus } from "@/types/payment";
 
 export const metadata: Metadata = {
@@ -10,9 +11,9 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Página de retorno do Checkout Pro. O Mercado Pago redireciona para cá com
-// payment_id e external_reference (o id do pedido no Firestore). Confirmamos
-// o status direto na API do Mercado Pago em vez de confiar na URL.
+// Página de retorno dos checkouts externos (InfinitePay e Checkout Pro do
+// Mercado Pago). Confirmamos o status direto na API do provedor em vez de
+// confiar nos parâmetros da URL.
 async function syncPayment(
   mpPaymentId: string | undefined,
   recordId: string | undefined
@@ -74,10 +75,15 @@ export default async function PagamentoRetornoPage({
     return Array.isArray(value) ? value[0] : value;
   };
 
-  const status = await syncPayment(
-    get("payment_id") || get("collection_id"),
-    get("external_reference")
-  );
+  // InfinitePay volta com order_nsu/transaction_nsu/slug; Mercado Pago com
+  // payment_id/external_reference.
+  const orderNsu = get("order_nsu");
+  const transactionNsu = get("transaction_nsu");
+  const slug = get("slug");
+  const status =
+    orderNsu && transactionNsu && slug
+      ? await syncInfinitePayPayment({ orderNsu, transactionNsu, slug }).catch(() => null)
+      : await syncPayment(get("payment_id") || get("collection_id"), get("external_reference"));
   const content = CONTENT[status ?? "NONE"];
 
   return (

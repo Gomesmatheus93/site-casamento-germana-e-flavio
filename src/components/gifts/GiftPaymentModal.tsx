@@ -153,8 +153,8 @@ export default function GiftPaymentModal({
 
   const customization = useMemo(
     () => ({
-      // Cartão é pago no Checkout Pro (página do Mercado Pago), que aprova
-      // mais cartões; aqui no formulário embutido fica só o Pix.
+      // Cartão é pago no checkout do InfinitePay (botão acima); aqui no
+      // formulário embutido do Mercado Pago fica só o Pix.
       paymentMethods: {
         bankTransfer: "all" as const,
       },
@@ -345,7 +345,7 @@ export default function GiftPaymentModal({
                 Pagar com cartão de crédito
               </button>
               <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
-                Você será levado ao ambiente seguro do Mercado Pago.
+                Você será levado ao ambiente seguro do InfinitePay, com parcelamento.
               </p>
               <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-[var(--color-muted)]">
                 <span className="h-px flex-1 bg-[var(--color-border)]" />
