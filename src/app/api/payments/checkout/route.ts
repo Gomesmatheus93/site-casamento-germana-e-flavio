@@ -83,7 +83,15 @@ export async function POST(req: NextRequest) {
       mpStatusDetail: err instanceof Error ? err.message : "erro",
       updatedAt: FieldValue.serverTimestamp(),
     });
-    const message = err instanceof Error ? err.message : "Erro ao iniciar o pagamento.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    // O detalhe técnico fica no pedido e no log; o convidado vê uma mensagem
+    // amigável que aponta para o Pix.
+    console.error("Erro ao criar link de pagamento no InfinitePay", err);
+    return NextResponse.json(
+      {
+        error:
+          "O pagamento com cartão está temporariamente indisponível. Você pode presentear via Pix — é só tocar em “Tentar novamente”.",
+      },
+      { status: 503 }
+    );
   }
 }
