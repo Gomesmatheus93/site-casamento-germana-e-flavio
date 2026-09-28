@@ -8,6 +8,47 @@ import { formatBRL } from "@/lib/format";
 
 let mpInitialized = false;
 
+declare global {
+  interface Window {
+    MP_DEVICE_SESSION_ID?: string;
+  }
+}
+
+// Script antifraude do Mercado Pago: gera o identificador do dispositivo
+// (window.MP_DEVICE_SESSION_ID). Sem ele, pagamentos com cartão tendem a ser
+// recusados com "cc_rejected_high_risk".
+function loadMpSecurityScript() {
+  if (document.getElementById("mp-security-js")) return;
+  const script = document.createElement("script");
+  script.id = "mp-security-js";
+  script.src = "https://www.mercadopago.com/v2/security.js";
+  script.setAttribute("view", "checkout");
+  script.async = true;
+  document.body.appendChild(script);
+}
+
+function rejectionMessage(statusDetail: string | undefined) {
+  switch (statusDetail) {
+    case "cc_rejected_bad_filled_card_number":
+    case "cc_rejected_bad_filled_date":
+    case "cc_rejected_bad_filled_other":
+    case "cc_rejected_bad_filled_security_code":
+      return "Algum dado do cartão parece incorreto. Confira e tente novamente.";
+    case "cc_rejected_insufficient_amount":
+      return "O cartão não tem limite suficiente. Tente outro cartão ou pague com Pix.";
+    case "cc_rejected_call_for_authorize":
+      return "O banco pediu autorização para este pagamento. Autorize com o seu banco e tente novamente.";
+    case "cc_rejected_card_disabled":
+      return "O cartão está inativo. Ligue para o seu banco para ativá-lo ou use outro cartão.";
+    case "cc_rejected_duplicated_payment":
+      return "Você já fez um pagamento com esse valor. Se precisar pagar de novo, use outro cartão ou Pix.";
+    case "cc_rejected_high_risk":
+      return "O pagamento foi recusado pelo sistema antifraude. Tente outro cartão ou pague com Pix.";
+    default:
+      return "Pagamento recusado. Tente novamente com outro cartão ou pague com Pix.";
+  }
+}
+
 type Step = "form" | "brick" | "processing" | "pix" | "success" | "pending" | "error";
 
 type PixData = {
@@ -40,6 +81,7 @@ export default function GiftPaymentModal({
       initMercadoPago(publicKey, { locale: "pt-BR" });
       mpInitialized = true;
     }
+    loadMpSecurityScript();
   }, []);
 
   useEffect(() => {
@@ -93,6 +135,7 @@ export default function GiftPaymentModal({
           giftId: gift.id,
           guestName,
           guestMessage: guestMessage || null,
+          deviceId: window.MP_DEVICE_SESSION_ID || null,
           formData: param.formData,
         }),
       });
@@ -117,7 +160,7 @@ export default function GiftPaymentModal({
         setStep("success");
         onGiftUpdated({ ...gift, status: "COMPRADO" });
       } else if (data.status === "RECUSADO" || data.status === "CANCELADO") {
-        setErrorMsg("Pagamento recusado. Tente novamente com outro cartão.");
+        setErrorMsg(rejectionMessage(data.statusDetail));
         setStep("error");
       } else {
         setStep("pending");
