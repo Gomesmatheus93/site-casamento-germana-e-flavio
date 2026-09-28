@@ -111,7 +111,7 @@ export default function GiftPaymentModal({
   }, []);
 
   useEffect(() => {
-    if ((step !== "pix" && step !== "challenge") || !paymentId) return;
+    if ((step !== "pix" && step !== "challenge" && step !== "pending") || !paymentId) return;
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/payments/${paymentId}`);
@@ -121,7 +121,7 @@ export default function GiftPaymentModal({
           setStep("success");
           onGiftUpdated({ ...gift, status: "COMPRADO" });
         } else if (
-          step === "challenge" &&
+          step !== "pix" &&
           (data.status === "RECUSADO" || data.status === "CANCELADO")
         ) {
           setErrorMsg(rejectionMessage(data.statusDetail));
@@ -400,8 +400,9 @@ export default function GiftPaymentModal({
                 Pagamento em análise
               </p>
               <p className="text-sm text-[var(--color-muted)]">
-                Assim que for aprovado pelo Mercado Pago, o presente é confirmado
-                automaticamente.
+                O Mercado Pago está analisando o pagamento. Você não precisa fazer nada:
+                o resultado aparece aqui assim que a análise terminar, o que pode levar
+                alguns minutos.
               </p>
               <button type="button" onClick={onClose} className="btn-outline mt-3">
                 Fechar
